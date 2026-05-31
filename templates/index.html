@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CV Tailor — AI Powered Job Applications</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+    <div class="nav-logo">CV<span>Tailor</span></div>
+    <div class="nav-badge">Free • No signup needed</div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+    <div class="hero-tag">✦ AI-powered in seconds</div>
+    <h1 class="hero-title">Land your next<br><span>dream job faster</span></h1>
+    <p class="hero-sub">Upload your CV and a job description. Get an instant match score, skills gap analysis, rewritten bullets, and a tailored cover letter — all powered by AI.</p>
+
+    <div class="feature-grid">
+        <div class="feature-card">
+            <div class="feature-icon" style="background:rgba(139,92,246,0.12);color:#a78bfa">📊</div>
+            <div class="feature-text">
+                <div class="feature-title">Match Score</div>
+                <div class="feature-desc">See exactly how well your CV fits the role</div>
+            </div>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon" style="background:rgba(248,113,113,0.12);color:#f87171">⚠</div>
+            <div class="feature-text">
+                <div class="feature-title">Skills Gap</div>
+                <div class="feature-desc">Find what's missing before they do</div>
+            </div>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon" style="background:rgba(34,197,94,0.12);color:#4ade80">✎</div>
+            <div class="feature-text">
+                <div class="feature-title">CV Rewrite</div>
+                <div class="feature-desc">AI rewrites your bullets to match the job</div>
+            </div>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon" style="background:rgba(96,165,250,0.12);color:#60a5fa">✉</div>
+            <div class="feature-text">
+                <div class="feature-title">Cover Letter</div>
+                <div class="feature-desc">Tailored cover letter generated instantly</div>
+            </div>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon" style="background:rgba(45,212,191,0.12);color:#2dd4bf">→</div>
+            <div class="feature-text">
+                <div class="feature-title">LinkedIn Summary</div>
+                <div class="feature-desc">Optimised LinkedIn profile for the role</div>
+            </div>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon" style="background:rgba(251,191,36,0.12);color:#fbbf24">⚡</div>
+            <div class="feature-text">
+                <div class="feature-title">Quick Wins</div>
+                <div class="feature-desc">3 instant actions to boost your chances</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- FORM -->
+<div class="form-section">
+    <div class="form-header">
+        <h2 class="form-title">Analyse your CV now</h2>
+        <p class="form-sub">Free. No account needed. Results in ~15 seconds.</p>
+    </div>
+
+    <form method="POST" action="/analyse" enctype="multipart/form-data" onsubmit="showLoading()">
+
+        <div class="card">
+            <div class="card-label">Your CV</div>
+            <div class="cv-toggle">
+                <button type="button" class="toggle-btn active" onclick="switchMode('file')">Upload PDF</button>
+                <button type="button" class="toggle-btn" onclick="switchMode('text')">Paste as Text</button>
+            </div>
+            <div id="fileMode">
+                <div class="upload-zone" onclick="document.getElementById('cvInput').click()">
+                    <div class="upload-icon">📄</div>
+                    <div class="upload-text"><strong>Click to upload</strong> or drag and drop<br>PDF files only</div>
+                    <div class="file-chosen" id="fileName"></div>
+                    <input type="file" id="cvInput" name="cv" accept=".pdf"
+                        onchange="document.getElementById('fileName').style.display='block';
+                                  document.getElementById('fileName').textContent='✓ ' + this.files[0].name;">
+                </div>
+            </div>
+            <div id="textMode" style="display:none">
+                <textarea name="cv_text" rows="10" placeholder="Paste your full CV text here..."></textarea>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-label">Job Description</div>
+            <div class="tone-row">
+                <label class="tone-label">Cover letter tone:</label>
+                <select name="tone" class="tone-select">
+                    <option value="professional">Professional</option>
+                    <option value="friendly">Friendly</option>
+                    <option value="bold">Bold & Confident</option>
+                </select>
+            </div>
+            <textarea name="job_description" rows="10" placeholder="Paste the full job description here..." required></textarea>
+        </div>
+
+        <button type="submit" class="submit-btn">✦ Analyse My CV — It's Free</button>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p class="loading-msg" id="loadingMsg">Reading your CV...</p>
+            <div class="loading-steps">
+                <div class="step" id="step1">📄 Reading CV</div>
+                <div class="step" id="step2">🔍 Matching skills</div>
+                <div class="step" id="step3">✍️ Writing analysis</div>
+                <div class="step" id="step4">✉️ Cover letter</div>
+            </div>
+        </div>
+
+    </form>
+
+    <!-- SOCIAL PROOF -->
+    <div class="proof-row">
+        <div class="proof-item">✦ No signup required</div>
+        <div class="proof-dot"></div>
+        <div class="proof-item">✦ Results in ~15 seconds</div>
+        <div class="proof-dot"></div>
+        <div class="proof-item">✦ Powered by Claude AI</div>
+    </div>
+</div>
+
+<script>
+const messages = [
+    "Reading your CV...",
+    "Matching your skills to the job...",
+    "Identifying skill gaps...",
+    "Rewriting your CV bullets...",
+    "Writing your cover letter...",
+    "Finalising your analysis..."
+];
+
+const stepTiming = [
+    { step: 'step1', delay: 0 },
+    { step: 'step2', delay: 3000 },
+    { step: 'step3', delay: 7000 },
+    { step: 'step4', delay: 11000 },
+];
+
+let msgIndex = 0;
+
+function showLoading() {
+    document.querySelector('.submit-btn').style.display = 'none';
+    document.querySelector('.proof-row').style.display = 'none';
+    document.getElementById('loading').style.display = 'block';
+
+    const msgEl = document.getElementById('loadingMsg');
+    msgEl.textContent = messages[0];
+
+    setInterval(() => {
+        msgIndex = (msgIndex + 1) % messages.length;
+        msgEl.style.opacity = '0';
+        setTimeout(() => {
+            msgEl.textContent = messages[msgIndex];
+            msgEl.style.opacity = '1';
+        }, 300);
+    }, 2500);
+
+    stepTiming.forEach(({ step, delay }, i) => {
+        setTimeout(() => {
+            if (i > 0) {
+                document.getElementById(stepTiming[i-1].step).classList.remove('active');
+                document.getElementById(stepTiming[i-1].step).classList.add('done');
+            }
+            document.getElementById(step).classList.add('active');
+        }, delay);
+    });
+}
+
+function switchMode(mode) {
+    const btns = document.querySelectorAll('.toggle-btn');
+    btns.forEach(b => b.classList.remove('active'));
+    if (mode === 'file') {
+        document.getElementById('fileMode').style.display = 'block';
+        document.getElementById('textMode').style.display = 'none';
+        document.getElementById('cvInput').required = true;
+        document.querySelector('#textMode textarea').required = false;
+        btns[0].classList.add('active');
+    } else {
+        document.getElementById('fileMode').style.display = 'none';
+        document.getElementById('textMode').style.display = 'block';
+        document.getElementById('cvInput').required = false;
+        document.querySelector('#textMode textarea').required = true;
+        btns[1].classList.add('active');
+    }
+}
+</script>
+</body>
+</html>

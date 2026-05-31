@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your CV Analysis</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+<div class="container">
+    <div class="result-badge">✓ Analysis complete</div>
+    <h1 class="result-title">Your CV Analysis</h1>
+    <p class="result-sub">Here's what our AI found — use this to strengthen your application.</p>
+
+    <div class="job-title-banner" id="jobTitleBanner">
+        Analysing your match for: <strong id="jobTitleText"></strong>
+    </div>
+
+    <div class="top-row">
+        <div class="score-card">
+            <div class="score-circle" id="scoreCircle">
+                <div class="score-circle-inner" id="scoreText">—</div>
+            </div>
+            <div class="score-label" id="scoreLabel">Match Score</div>
+            <div class="score-desc" id="scoreDesc">Calculating...</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">✦</div>
+            <div class="stat-num green" id="strengthCount">—</div>
+            <div class="stat-label">Strengths</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">⚠</div>
+            <div class="stat-num red" id="gapCount">—</div>
+            <div class="stat-label">Gaps found</div>
+        </div>
+    </div>
+
+    <div class="tips-card" id="tipsCard" style="display:none">
+        <div class="tips-header">⚡ Quick wins — do these first</div>
+        <div id="tipsList"></div>
+    </div>
+
+    <div class="section-card" id="strengthsCard" style="display:none">
+        <div class="section-header green-header"><span class="section-icon">✦</span> Strengths</div>
+        <div id="strengthsList" class="items-list"></div>
+    </div>
+
+    <div class="section-card" id="missingCard" style="display:none">
+        <div class="section-header red-header"><span class="section-icon">⚠</span> Missing Skills</div>
+        <div id="missingList" class="tags-container"></div>
+    </div>
+
+    <div class="section-card" id="bulletsCard" style="display:none">
+        <div class="section-header purple-header"><span class="section-icon">✎</span> Improved CV Bullets</div>
+        <div id="bulletsList" class="items-list"></div>
+    </div>
+
+    <div class="section-card" id="linkedinCard" style="display:none">
+        <div class="section-header teal-header"><span class="section-icon">→</span> LinkedIn Summary</div>
+        <div id="linkedinText" class="cover-text"></div>
+        <button class="copy-btn" onclick="copyText('linkedinText', this)">Copy LinkedIn Summary</button>
+    </div>
+
+    <div class="section-card" id="coverCard" style="display:none">
+        <div class="section-header blue-header"><span class="section-icon">✉</span> Cover Letter</div>
+        <div id="coverText" class="cover-text"></div>
+        <button class="copy-btn" onclick="copyText('coverText', this)">Copy Cover Letter</button>
+        <button class="download-btn" onclick="downloadPDF()">Download Full Report PDF</button>
+    </div>
+
+    <a href="/" class="back-btn">← Analyse another CV</a>
+</div>
+
+<script>
+const raw = {{ result | tojson }};
+
+// Clean section names for matching
+const SECTIONS = [
+    'JOB TITLE',
+    'MATCH SCORE', 
+    'QUICK WINS',
+    'STRENGTHS',
+    'MISSING SKILLS',
+    'IMPROVED BULLETS',
+    'LINKEDIN SUMMARY',
+    'COVER LETTER'
+];
+
+function extractSection(text, sectionName) {
+    const lines = text.split('\n');
+    let result = [];
+    let inSection = false;
+    
+    for (let i = 0; i < lines.length; i++) {
+        const trimmed = lines[i].trim();
+        const upper = trimmed.toUpperCase().replace(/[^A-Z\s]/g, '').trim();
+        
+        // Check if this line IS our section heading
+        if (upper === sectionName) {
+            inSection = true;
+            continue;
+        }
+        
+        // Check if this line is ANY other section heading — stop capturing
+        if (inSection && SECTIONS.some(s => s !== sectionName && upper === s)) {
+            break;
+        }
+        
+        if (inSection && trimmed.length > 0) {
+            result.push(trimmed);
+        }
+    }
+    
+    return result.join('\n').trim();
+}
+
+function parseBullets(text) {
+    // Split on lines starting with - or * or numbers
+    const lines = text.split('\n');
+    const items = [];
+    let current = '';
+    
+    for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed) continue;
+        
+        // New bullet starts with - or * or number
+        if (/^[-*•]/.test(trimmed) || /^\d+\./.test(trimmed)) {
+            if (current) items.push(current.trim());
+            current = trimmed.replace(/^[-*•\d.]+\s*/, '').replace(/\*\*/g, '');
+        } else {
+            // Continuation of previous bullet
+            current += ' ' + trimmed.replace(/\*\*/g, '');
+        }
+    }
+    if (current) items.push(current.trim());
+    
+    return items.filter(i => i.length > 5);
+}
+
+// Job title
+const titleRaw = extractSection(raw, 'JOB TITLE');
+const titleLine = titleRaw.split('\n')[0].replace(/^[-*]\s*/, '').trim();
+if (titleLine && titleLine.length > 2) {
+    document.getElementById('jobTitleBanner').style.display = 'block';
+    document.getElementById('jobTitleText').textContent = titleLine;
+}
+
+// Score
+const scoreRaw = extractSection(raw, 'MATCH SCORE');
+const scoreMatch = scoreRaw.match(/(\d+)/);
+if (scoreMatch) {
+    const score = parseInt(scoreMatch[1]);
+    const circle = document.getElementById('scoreCircle');
+    const text = document.getElementById('scoreText');
+    const label = document.getElementById('scoreLabel');
+    const desc = document.getElementById('scoreDesc');
+    text.textContent = score + '%';
+    if (score >= 70) {
+        circle.style.background = `conic-gradient(#22c55e ${score}%, #1c1c24 0)`;
+        text.style.color = '#4ade80';
+        label.textContent = 'Strong Match';
+        desc.textContent = 'Your CV aligns well with this role.';
+    } else if (score >= 40) {
+        circle.style.background = `conic-gradient(#f59e0b ${score}%, #1c1c24 0)`;
+        text.style.color = '#fbbf24';
+        label.textContent = 'Partial Match';
+        desc.textContent = 'You meet some requirements.';
+    } else {
+        circle.style.background = `conic-gradient(#ef4444 ${score}%, #1c1c24 0)`;
+        text.style.color = '#f87171';
+        label.textContent = 'Low Match';
+        desc.textContent = 'Significant gaps to address.';
+    }
+}
+
+// Quick wins
+const tipsRaw = extractSection(raw, 'QUICK WINS');
+const tips = parseBullets(tipsRaw).slice(0, 3);
+if (tips.length > 0) {
+    document.getElementById('tipsCard').style.display = 'block';
+    const list = document.getElementById('tipsList');
+    tips.forEach((tip, i) => {
+        list.innerHTML += `<div class="tip-row">
+            <div class="tip-num">${i+1}</div>
+            <div class="tip-text">${tip}</div>
+        </div>`;
+    });
+}
+
+// Strengths
+const strengthsRaw = extractSection(raw, 'STRENGTHS');
+const strengths = parseBullets(strengthsRaw);
+if (strengths.length > 0) {
+    document.getElementById('strengthsCard').style.display = 'block';
+    document.getElementById('strengthCount').textContent = strengths.length;
+    const list = document.getElementById('strengthsList');
+    strengths.forEach(item => {
+        const colonIdx = item.indexOf(':');
+        const title = colonIdx > -1 ? item.slice(0, colonIdx).trim() : item;
+        const body = colonIdx > -1 ? item.slice(colonIdx + 1).trim() : '';
+        list.innerHTML += `<div class="item-row green-item">
+            <div class="item-dot green-dot"></div>
+            <div>
+                <div class="item-title">${title}</div>
+                ${body ? `<div class="item-body">${body}</div>` : ''}
+            </div>
+        </div>`;
+    });
+}
+
+// Missing skills
+const missingRaw = extractSection(raw, 'MISSING SKILLS');
+const missing = parseBullets(missingRaw);
+if (missing.length > 0) {
+    document.getElementById('missingCard').style.display = 'block';
+    document.getElementById('gapCount').textContent = missing.length;
+    const container = document.getElementById('missingList');
+    missing.forEach(item => {
+        const clean = item.split(':')[0].replace(/\(.*\)/g, '').trim();
+        if (clean.length > 1 && clean.length < 50) {
+            container.innerHTML += `<span class="skill-tag red-tag">${clean}</span>`;
+        }
+    });
+}
+
+// Improved bullets
+const bulletsRaw = extractSection(raw, 'IMPROVED BULLETS');
+const bullets = parseBullets(bulletsRaw).filter(b => b.length > 20);
+if (bullets.length > 0) {
+    document.getElementById('bulletsCard').style.display = 'block';
+    const list = document.getElementById('bulletsList');
+    bullets.forEach(item => {
+        list.innerHTML += `<div class="item-row purple-item">
+            <div class="item-dot purple-dot"></div>
+            <div class="item-body">${item}</div>
+        </div>`;
+    });
+}
+
+// LinkedIn
+const linkedinRaw = extractSection(raw, 'LINKEDIN SUMMARY');
+const linkedinClean = linkedinRaw.replace(/\*\*/g, '').trim();
+if (linkedinClean.length > 30) {
+    document.getElementById('linkedinCard').style.display = 'block';
+    document.getElementById('linkedinText').textContent = linkedinClean;
+}
+
+// Cover letter
+const coverRaw = extractSection(raw, 'COVER LETTER');
+const coverClean = coverRaw.replace(/\*\*/g, '').trim();
+if (coverClean.length > 50) {
+    document.getElementById('coverCard').style.display = 'block';
+    document.getElementById('coverText').textContent = coverClean;
+}
+
+function copyText(id, btn) {
+    const text = document.getElementById(id).textContent;
+    navigator.clipboard.writeText(text).then(() => {
+        const orig = btn.textContent;
+        btn.textContent = '✓ Copied!';
+        btn.style.background = 'rgba(34,197,94,0.2)';
+        btn.style.color = '#4ade80';
+        setTimeout(() => {
+            btn.textContent = orig;
+            btn.style.background = '';
+            btn.style.color = '';
+        }, 2000);
+    });
+}
+
+function downloadPDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    const margin = 15;
+    let y = 20;
+
+    doc.setFontSize(20);
+    doc.setTextColor(124, 58, 237);
+    doc.text('CV Analysis Report', margin, y);
+    y += 12;
+
+    doc.setFontSize(11);
+    doc.setTextColor(80, 80, 80);
+    doc.text(new Date().toLocaleDateString('en-GB', {day:'numeric',month:'long',year:'numeric'}), margin, y);
+    y += 16;
+
+    const exportSections = [
+        { title: 'Match Score', id: 'scoreText' },
+        { title: 'Quick Wins', id: 'tipsList' },
+        { title: 'LinkedIn Summary', id: 'linkedinText' },
+        { title: 'Cover Letter', id: 'coverText' },
+    ];
+
+    exportSections.forEach(({ title, id }) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const text = el.innerText;
+        if (!text || text === '—') return;
+
+        if (y > 250) { doc.addPage(); y = 20; }
+
+        doc.setFontSize(13);
+        doc.setTextColor(124, 58, 237);
+        doc.text(title, margin, y);
+        y += 8;
+
+        doc.setFontSize(10);
+        doc.setTextColor(50, 50, 50);
+        const lines = doc.splitTextToSize(text, 180);
+        lines.forEach(line => {
+            if (y > 270) { doc.addPage(); y = 20; }
+            doc.text(line, margin, y);
+            y += 6;
+        });
+        y += 8;
+    });
+
+    doc.save('cv-analysis-report.pdf');
+}
+</script>
+</body>
+</html>
