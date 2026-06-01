@@ -16,6 +16,9 @@ def extract_text_from_pdf(pdf_file):
     for page in doc:
         text += page.get_text()
     return text
+@app.route("/health")
+def health():
+    return "OK"
 
 @app.route('/')
 def index():
