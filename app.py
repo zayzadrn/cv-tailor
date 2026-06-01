@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = Flask(__name__)
-client = Anthropic()
+client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
 
 def extract_text_from_pdf(pdf_file):
     pdf_bytes = pdf_file.read()
