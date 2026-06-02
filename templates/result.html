@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Your CV Analysis</title>
+    <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
     <link rel="stylesheet" href="/static/style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
@@ -97,13 +98,11 @@ function extractSection(text, sectionName) {
         const trimmed = lines[i].trim();
         const upper = trimmed.toUpperCase().replace(/[^A-Z\s]/g, '').trim();
         
-        // Check if this line IS our section heading
         if (upper === sectionName) {
             inSection = true;
             continue;
         }
         
-        // Check if this line is ANY other section heading — stop capturing
         if (inSection && SECTIONS.some(s => s !== sectionName && upper === s)) {
             break;
         }
@@ -117,7 +116,6 @@ function extractSection(text, sectionName) {
 }
 
 function parseBullets(text) {
-    // Split on lines starting with - or * or numbers
     const lines = text.split('\n');
     const items = [];
     let current = '';
@@ -126,12 +124,10 @@ function parseBullets(text) {
         const trimmed = line.trim();
         if (!trimmed) continue;
         
-        // New bullet starts with - or * or number
         if (/^[-*•]/.test(trimmed) || /^\d+\./.test(trimmed)) {
             if (current) items.push(current.trim());
             current = trimmed.replace(/^[-*•\d.]+\s*/, '').replace(/\*\*/g, '');
         } else {
-            // Continuation of previous bullet
             current += ' ' + trimmed.replace(/\*\*/g, '');
         }
     }
@@ -279,7 +275,6 @@ function downloadPDF() {
     const contentW = pageW - margin * 2;
     let y = 0;
 
-    // Header bar
     doc.setFillColor(26, 26, 26);
     doc.rect(0, 0, pageW, 28, 'F');
 
@@ -300,7 +295,6 @@ function downloadPDF() {
 
     y = 40;
 
-    // Job title banner
     const jobTitle = document.getElementById('jobTitleText')?.textContent || 'CV Analysis';
     doc.setFillColor(250, 249, 246);
     doc.roundedRect(margin, y, contentW, 14, 2, 2, 'F');
@@ -310,7 +304,6 @@ function downloadPDF() {
     doc.text('Role: ' + jobTitle, margin + 5, y + 9);
     y += 22;
 
-    // Score section
     const scoreText = document.getElementById('scoreText')?.textContent || '—';
     const scoreLabel = document.getElementById('scoreLabel')?.textContent || '';
     const score = parseInt(scoreText);
@@ -345,7 +338,6 @@ function downloadPDF() {
 
         if (y > 250) { doc.addPage(); y = 20; }
 
-        // Section heading
         doc.setFillColor(...color);
         doc.roundedRect(margin, y, contentW, 9, 1, 1, 'F');
         doc.setFontSize(8);
@@ -354,7 +346,6 @@ function downloadPDF() {
         doc.text(title.toUpperCase(), margin + 4, y + 6);
         y += 13;
 
-        // Content
         doc.setFontSize(9);
         doc.setFont('helvetica', 'normal');
         doc.setTextColor(68, 64, 60);
@@ -374,7 +365,6 @@ function downloadPDF() {
     addSection('LinkedIn Summary', [240, 253, 250], document.getElementById('linkedinText'));
     addSection('Cover Letter', [239, 246, 255], document.getElementById('coverText'));
 
-    // Footer
     const pageCount = doc.getNumberOfPages();
     for (let i = 1; i <= pageCount; i++) {
         doc.setPage(i);

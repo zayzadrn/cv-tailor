@@ -866,3 +866,75 @@ textarea::placeholder { color: #d6d3d1; }
 
 .match-ok { color: #16a34a; }
 .match-fail { color: #dc2626; }
+
+/* MOBILE RESPONSIVE */
+@media (max-width: 640px) {
+    .nav {
+        padding: 14px 20px;
+    }
+
+    .nav-logo { font-size: 16px; }
+
+    .hero { padding: 40px 20px 36px; }
+
+    .hero-title { font-size: 34px; }
+
+    .hero-sub { font-size: 14px; margin-bottom: 32px; }
+
+    .feature-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+
+    .form-section { padding: 32px 16px 60px; }
+
+    .container { padding: 32px 16px 60px; }
+
+    .top-row {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+
+    .score-card {
+        flex-direction: row;
+        text-align: left;
+        gap: 16px;
+    }
+
+    .history-card {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .history-actions {
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    .proof-row {
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    .nav-name { display: none; }
+
+    .hero-title { font-size: 30px; }
+
+    .result-title { font-size: 24px; }
+
+    .auth-card { padding: 28px 20px; }
+
+    .section-card { padding: 16px; }
+
+    .top-row {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .stat-num { font-size: 22px; }
+
+    button.copy-btn, button.download-btn {
+        width: 100%;
+        margin-right: 0;
+        margin-bottom: 8px;
+    }
+}

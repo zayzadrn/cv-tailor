@@ -230,16 +230,27 @@ def update_account():
     action = request.form.get('action')
 
     if action == 'update_profile':
-        name = request.form.get('name').strip()
-        email = request.form.get('email').strip().lower()
-        if email != current_user.email:
-            if User.query.filter_by(email=email).first():
-                flash('That email is already in use.', 'error')
-                return redirect(url_for('account'))
-        current_user.name = name
-        current_user.email = email
-        db.session.commit()
-        flash('Profile updated successfully.', 'success')
+    name = request.form.get('name', '').strip()
+    new_email = request.form.get('email', '').strip().lower()
+    
+    if not name:
+        flash('Name cannot be empty.', 'error')
+        return redirect(url_for('account'))
+    
+    if not new_email:
+        flash('Email cannot be empty.', 'error')
+        return redirect(url_for('account'))
+    
+    if new_email != current_user.email:
+        existing = User.query.filter_by(email=new_email).first()
+        if existing:
+            flash('That email is already used by another account.', 'error')
+            return redirect(url_for('account'))
+        current_user.email = new_email
+    
+    current_user.name = name
+    db.session.commit()
+    flash('Profile updated successfully.', 'success')
 
     elif action == 'change_password':
         current_pw = request.form.get('current_password')
@@ -266,6 +277,14 @@ def update_account():
         return redirect(url_for('index'))
 
     return redirect(url_for('account'))
+
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template('404.html'), 404
+
+@app.errorhandler(500)
+def server_error(e):
+    return render_template('404.html'), 500
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
