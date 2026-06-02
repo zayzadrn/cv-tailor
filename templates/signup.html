@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up — CVTailor</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="nav">
+    <div class="nav-logo">CV<span>Tailor</span></div>
+</div>
+<div class="auth-wrapper">
+    <div class="auth-card">
+        <h1 class="auth-title">Create your account</h1>
+        <p class="auth-sub">Free forever. No credit card needed.</p>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+                <div class="auth-error">{{ message }}</div>
+            {% endfor %}
+        {% endwith %}
+
+        <form method="POST" action="/signup" id="signupForm">
+            <div class="auth-field">
+                <label class="auth-label">Full Name</label>
+                <input type="text" name="name" class="auth-input" placeholder="Your full name" required>
+            </div>
+
+            <div class="auth-field">
+                <label class="auth-label">Email</label>
+                <input type="email" name="email" class="auth-input" placeholder="you@example.com" required>
+            </div>
+
+            <div class="auth-field">
+                <label class="auth-label">Password</label>
+                <div class="password-wrap">
+                    <input type="password" name="password" id="password" class="auth-input" placeholder="Create a password" required oninput="checkStrength(this.value)">
+                    <button type="button" class="eye-btn" onclick="togglePassword('password', this)">👁</button>
+                </div>
+                <div class="strength-bar-wrap">
+                    <div class="strength-bar" id="strengthBar"></div>
+                </div>
+                <div class="strength-rules" id="rules">
+                    <div class="rule" id="rule-length">✗ At least 8 characters</div>
+                    <div class="rule" id="rule-upper">✗ One uppercase letter</div>
+                    <div class="rule" id="rule-special">✗ One special character (!@#$%)</div>
+                    <div class="rule" id="rule-number">✗ One number</div>
+                </div>
+            </div>
+
+            <div class="auth-field">
+                <label class="auth-label">Confirm Password</label>
+                <div class="password-wrap">
+                    <input type="password" name="confirm_password" id="confirm_password" class="auth-input" placeholder="Repeat your password" required oninput="checkMatch()">
+                    <button type="button" class="eye-btn" onclick="togglePassword('confirm_password', this)">👁</button>
+                </div>
+                <div class="match-msg" id="matchMsg"></div>
+            </div>
+
+            <button type="submit" class="submit-btn" id="submitBtn">Create Account</button>
+        </form>
+
+        <p class="auth-switch">Already have an account? <a href="/login">Log in</a></p>
+    </div>
+</div>
+
+<script>
+function togglePassword(id, btn) {
+    const input = document.getElementById(id);
+    if (input.type === 'password') {
+        input.type = 'text';
+        btn.textContent = '🙈';
+    } else {
+        input.type = 'password';
+        btn.textContent = '👁';
+    }
+}
+
+function checkStrength(val) {
+    const rules = {
+        'rule-length': val.length >= 8,
+        'rule-upper': /[A-Z]/.test(val),
+        'rule-special': /[!@#$%^&*(),.?":{}|<>]/.test(val),
+        'rule-number': /[0-9]/.test(val)
+    };
+
+    let passed = 0;
+    for (const [id, ok] of Object.entries(rules)) {
+        const el = document.getElementById(id);
+        if (ok) {
+            el.textContent = '✓ ' + el.textContent.slice(2);
+            el.classList.add('rule-pass');
+            passed++;
+        } else {
+            el.textContent = '✗ ' + el.textContent.slice(2);
+            el.classList.remove('rule-pass');
+        }
+    }
+
+    const bar = document.getElementById('strengthBar');
+    const colors = ['#ef4444', '#f97316', '#eab308', '#16a34a'];
+    const widths = ['25%', '50%', '75%', '100%'];
+    bar.style.width = passed > 0 ? widths[passed - 1] : '0%';
+    bar.style.background = passed > 0 ? colors[passed - 1] : '#e8e6e0';
+}
+
+function checkMatch() {
+    const p1 = document.getElementById('password').value;
+    const p2 = document.getElementById('confirm_password').value;
+    const msg = document.getElementById('matchMsg');
+    if (p2.length === 0) { msg.textContent = ''; return; }
+    if (p1 === p2) {
+        msg.textContent = '✓ Passwords match';
+        msg.className = 'match-msg match-ok';
+    } else {
+        msg.textContent = '✗ Passwords do not match';
+        msg.className = 'match-msg match-fail';
+    }
+}
+
+document.getElementById('signupForm').addEventListener('submit', function(e) {
+    const p1 = document.getElementById('password').value;
+    const p2 = document.getElementById('confirm_password').value;
+    if (p1 !== p2) {
+        e.preventDefault();
+        document.getElementById('matchMsg').textContent = '✗ Passwords do not match';
+        document.getElementById('matchMsg').className = 'match-msg match-fail';
+        return;
+    }
+    const rules = [p1.length >= 8, /[A-Z]/.test(p1), /[!@#$%^&*(),.?":{}|<>]/.test(p1), /[0-9]/.test(p1)];
+    if (!rules.every(Boolean)) {
+        e.preventDefault();
+        alert('Please make sure your password meets all requirements.');
+    }
+});
+</script>
+</body>
+</html>

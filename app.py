@@ -1,13 +1,48 @@
 import os
 import fitz
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, redirect, url_for, flash
 from anthropic import Anthropic
 from dotenv import load_dotenv
+from flask_sqlalchemy import SQLAlchemy
+from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
+from flask_bcrypt import Bcrypt
+from datetime import datetime
 
 load_dotenv()
 
 app = Flask(__name__)
-client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///cvtailor.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
+db = SQLAlchemy(app)
+bcrypt = Bcrypt(app)
+login_manager = LoginManager(app)
+login_manager.login_view = 'login'
+client = Anthropic()
+
+# Models
+class User(UserMixin, db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(150), unique=True, nullable=False)
+    name = db.Column(db.String(150), nullable=False)
+    password = db.Column(db.String(200), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    analyses = db.relationship('Analysis', backref='user', lazy=True)
+
+class Analysis(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    job_title = db.Column(db.String(200))
+    match_score = db.Column(db.String(10))
+    result = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+
+with app.app_context():
+    db.create_all()
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
 
 def extract_text_from_pdf(pdf_file):
     pdf_bytes = pdf_file.read()
@@ -16,15 +51,85 @@ def extract_text_from_pdf(pdf_file):
     for page in doc:
         text += page.get_text()
     return text
-@app.route("/health")
-def health():
-    return "OK"
 
+# Routes
 @app.route('/')
 def index():
     return render_template('index.html')
 
+@app.route('/signup', methods=['GET', 'POST'])
+def signup():
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+    if request.method == 'POST':
+        email = request.form.get('email').strip().lower()
+        name = request.form.get('name').strip()
+        password = request.form.get('password')
+        confirm = request.form.get('confirm_password')
+
+        if password != confirm:
+            flash('Passwords do not match.', 'error')
+            return redirect(url_for('signup'))
+        if len(password) < 8:
+            flash('Password must be at least 8 characters.', 'error')
+            return redirect(url_for('signup'))
+        if User.query.filter_by(email=email).first():
+            flash('An account with that email already exists.', 'error')
+            return redirect(url_for('signup'))
+
+        hashed = bcrypt.generate_password_hash(password).decode('utf-8')
+        user = User(email=email, name=name, password=hashed)
+        db.session.add(user)
+        db.session.commit()
+        login_user(user)
+        return redirect(url_for('index'))
+    return render_template('signup.html')
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+    if request.method == 'POST':
+        email = request.form.get('email').strip().lower()
+        password = request.form.get('password')
+        user = User.query.filter_by(email=email).first()
+        if user and bcrypt.check_password_hash(user.password, password):
+            login_user(user)
+            return redirect(url_for('index'))
+        flash('Incorrect email or password.', 'error')
+    return render_template('login.html')
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('index'))
+
+@app.route('/history')
+@login_required
+def history():
+    analyses = Analysis.query.filter_by(user_id=current_user.id).order_by(Analysis.created_at.desc()).all()
+    return render_template('history.html', analyses=analyses)
+
+@app.route('/history/<int:id>')
+@login_required
+def view_analysis(id):
+    analysis = Analysis.query.get_or_404(id)
+    if analysis.user_id != current_user.id:
+        return redirect(url_for('history'))
+    return render_template('result.html', result=analysis.result)
+
+@app.route('/history/<int:id>/delete', methods=['POST'])
+@login_required
+def delete_analysis(id):
+    analysis = Analysis.query.get_or_404(id)
+    if analysis.user_id == current_user.id:
+        db.session.delete(analysis)
+        db.session.commit()
+    return redirect(url_for('history'))
+
 @app.route('/analyse', methods=['POST'])
+@login_required
 def analyse():
     job_description = request.form['job_description']
     tone = request.form.get('tone', 'professional')
@@ -87,6 +192,26 @@ IMPORTANT: Use ONLY the section headings listed above. Do not add any other text
     )
 
     result = message.content[0].text
+
+    job_title = "Unknown Role"
+    match_score = "0%"
+    lines = result.split('\n')
+    for i, line in enumerate(lines):
+        stripped = line.strip()
+        if '%' in stripped and len(stripped) < 10:
+            match_score = stripped
+        if stripped and len(stripped) < 100 and not stripped.startswith('-') and 'JOB TITLE' not in stripped.upper() and job_title == "Unknown Role":
+            job_title = stripped
+
+    analysis = Analysis(
+        job_title=job_title,
+        match_score=match_score,
+        result=result,
+        user_id=current_user.id
+    )
+    db.session.add(analysis)
+    db.session.commit()
+
     return render_template('result.html', result=result)
 
 if __name__ == '__main__':

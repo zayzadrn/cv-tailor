@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analysis History — CVTailor</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="nav">
+    <div class="nav-logo">CV<span>Tailor</span></div>
+    <div style="display:flex;gap:10px;align-items:center;">
+        <a href="/" class="back-btn" style="margin:0">← New Analysis</a>
+    </div>
+</div>
+
+<div class="container">
+    <div style="margin-bottom:32px;">
+        <h1 class="result-title">Analysis History</h1>
+        <p class="result-sub">Your past CV analyses — click any to view the full results.</p>
+    </div>
+
+    {% if analyses %}
+        <div class="items-list">
+            {% for a in analyses %}
+            <div class="history-card">
+                <div class="history-left">
+                    <div class="history-score {% if a.match_score|replace('%','')|int >= 70 %}score-high{% elif a.match_score|replace('%','')|int >= 40 %}score-mid{% else %}score-low{% endif %}">
+                        {{ a.match_score }}
+                    </div>
+                    <div>
+                        <div class="history-title">{{ a.job_title }}</div>
+                        <div class="history-date">{{ a.created_at.strftime('%d %b %Y, %H:%M') }}</div>
+                    </div>
+                </div>
+                <div class="history-actions">
+                    <a href="/history/{{ a.id }}" class="copy-btn">View Results</a>
+                    <form method="POST" action="/history/{{ a.id }}/delete" style="display:inline;">
+                        <button type="submit" class="delete-btn" onclick="return confirm('Delete this analysis?')">Delete</button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">📋</div>
+            <h3>No analyses yet</h3>
+            <p>Run your first CV analysis to see it saved here.</p>
+            <a href="/" class="submit-btn" style="display:inline-block;width:auto;padding:12px 24px;text-decoration:none;margin-top:16px;">Analyse a CV</a>
+        </div>
+    {% endif %}
+</div>
+</body>
+</html>

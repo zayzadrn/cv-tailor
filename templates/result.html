@@ -273,50 +273,119 @@ function copyText(id, btn) {
 
 function downloadPDF() {
     const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-    const margin = 15;
-    let y = 20;
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const pageW = 210;
+    const margin = 20;
+    const contentW = pageW - margin * 2;
+    let y = 0;
+
+    // Header bar
+    doc.setFillColor(26, 26, 26);
+    doc.rect(0, 0, pageW, 28, 'F');
+
+    doc.setFontSize(16);
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('helvetica', 'bold');
+    doc.text('CVTailor', margin, 17);
+
+    doc.setFontSize(9);
+    doc.setTextColor(180, 180, 180);
+    doc.setFont('helvetica', 'normal');
+    doc.text('AI-Powered CV Analysis Report', margin + 32, 17);
+
+    doc.setFontSize(9);
+    doc.setTextColor(180, 180, 180);
+    const dateStr = new Date().toLocaleDateString('en-GB', {day:'numeric',month:'long',year:'numeric'});
+    doc.text(dateStr, pageW - margin, 17, { align: 'right' });
+
+    y = 40;
+
+    // Job title banner
+    const jobTitle = document.getElementById('jobTitleText')?.textContent || 'CV Analysis';
+    doc.setFillColor(250, 249, 246);
+    doc.roundedRect(margin, y, contentW, 14, 2, 2, 'F');
+    doc.setFontSize(11);
+    doc.setTextColor(26, 26, 26);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Role: ' + jobTitle, margin + 5, y + 9);
+    y += 22;
+
+    // Score section
+    const scoreText = document.getElementById('scoreText')?.textContent || '—';
+    const scoreLabel = document.getElementById('scoreLabel')?.textContent || '';
+    const score = parseInt(scoreText);
+
+    doc.setFillColor(score >= 70 ? 240 : score >= 40 ? 255 : 254,
+                     score >= 70 ? 253 : score >= 40 ? 251 : 242,
+                     score >= 70 ? 244 : score >= 40 ? 235 : 242);
+    doc.roundedRect(margin, y, contentW, 20, 2, 2, 'F');
 
     doc.setFontSize(20);
-    doc.setTextColor(124, 58, 237);
-    doc.text('CV Analysis Report', margin, y);
-    y += 12;
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(score >= 70 ? 22 : score >= 40 ? 217 : 220,
+                     score >= 70 ? 163 : score >= 40 ? 119 : 38,
+                     score >= 70 ? 74 : score >= 40 ? 6 : 38);
+    doc.text(scoreText, margin + 8, y + 13);
 
     doc.setFontSize(11);
-    doc.setTextColor(80, 80, 80);
-    doc.text(new Date().toLocaleDateString('en-GB', {day:'numeric',month:'long',year:'numeric'}), margin, y);
-    y += 16;
+    doc.setTextColor(26, 26, 26);
+    doc.setFont('helvetica', 'bold');
+    doc.text(scoreLabel, margin + 28, y + 10);
 
-    const exportSections = [
-        { title: 'Match Score', id: 'scoreText' },
-        { title: 'Quick Wins', id: 'tipsList' },
-        { title: 'LinkedIn Summary', id: 'linkedinText' },
-        { title: 'Cover Letter', id: 'coverText' },
-    ];
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(120, 113, 108);
+    doc.text(document.getElementById('scoreDesc')?.textContent || '', margin + 28, y + 16);
+    y += 28;
 
-    exportSections.forEach(({ title, id }) => {
-        const el = document.getElementById(id);
-        if (!el) return;
-        const text = el.innerText;
+    function addSection(title, color, contentEl) {
+        if (!contentEl) return;
+        const text = contentEl.innerText?.trim();
         if (!text || text === '—') return;
 
         if (y > 250) { doc.addPage(); y = 20; }
 
-        doc.setFontSize(13);
-        doc.setTextColor(124, 58, 237);
-        doc.text(title, margin, y);
-        y += 8;
+        // Section heading
+        doc.setFillColor(...color);
+        doc.roundedRect(margin, y, contentW, 9, 1, 1, 'F');
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(26, 26, 26);
+        doc.text(title.toUpperCase(), margin + 4, y + 6);
+        y += 13;
 
-        doc.setFontSize(10);
-        doc.setTextColor(50, 50, 50);
-        const lines = doc.splitTextToSize(text, 180);
+        // Content
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(68, 64, 60);
+        const lines = doc.splitTextToSize(text, contentW - 4);
         lines.forEach(line => {
             if (y > 270) { doc.addPage(); y = 20; }
-            doc.text(line, margin, y);
-            y += 6;
+            doc.text(line, margin + 2, y);
+            y += 5;
         });
-        y += 8;
-    });
+        y += 6;
+    }
+
+    addSection('Quick Wins', [254, 243, 199], document.getElementById('tipsList'));
+    addSection('Strengths', [240, 253, 244], document.getElementById('strengthsList'));
+    addSection('Missing Skills', [254, 242, 242], document.getElementById('missingList'));
+    addSection('Improved CV Bullets', [250, 245, 255], document.getElementById('bulletsList'));
+    addSection('LinkedIn Summary', [240, 253, 250], document.getElementById('linkedinText'));
+    addSection('Cover Letter', [239, 246, 255], document.getElementById('coverText'));
+
+    // Footer
+    const pageCount = doc.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFillColor(250, 249, 246);
+        doc.rect(0, 285, pageW, 12, 'F');
+        doc.setFontSize(8);
+        doc.setTextColor(168, 162, 158);
+        doc.setFont('helvetica', 'normal');
+        doc.text('Generated by CVTailor — cv-tailor-production-e361.up.railway.app', margin, 291);
+        doc.text(`Page ${i} of ${pageCount}`, pageW - margin, 291, { align: 'right' });
+    }
 
     doc.save('cv-analysis-report.pdf');
 }

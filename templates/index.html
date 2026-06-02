@@ -11,7 +11,16 @@
 <!-- NAV -->
 <nav class="nav">
     <div class="nav-logo">CV<span>Tailor</span></div>
-    <div class="nav-badge">Free • No signup needed</div>
+    <div style="display:flex;gap:10px;align-items:center;">
+        {% if current_user.is_authenticated %}
+            <span class="nav-name">Hi, {{ current_user.name.split()[0] }}</span>
+            <a href="/history" class="history-nav-btn">History</a>
+            <a href="/logout" class="history-nav-btn">Log out</a>
+        {% else %}
+            <a href="/login" class="history-nav-btn">Log in</a>
+            <a href="/signup" class="nav-badge" style="text-decoration:none;">Sign up free</a>
+        {% endif %}
+    </div>
 </nav>
 
 <!-- HERO -->
