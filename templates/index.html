@@ -15,6 +15,7 @@
         {% if current_user.is_authenticated %}
             <span class="nav-name">Hi, {{ current_user.name.split()[0] }}</span>
             <a href="/history" class="history-nav-btn">History</a>
+            <a href="/account" class="history-nav-btn">Account</a>
             <a href="/logout" class="history-nav-btn">Log out</a>
         {% else %}
             <a href="/login" class="history-nav-btn">Log in</a>

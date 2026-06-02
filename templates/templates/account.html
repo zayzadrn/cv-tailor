@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account — CVTailor</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="nav">
+    <div class="nav-logo">CV<span>Tailor</span></div>
+    <div style="display:flex;gap:10px;align-items:center;">
+        <a href="/" class="history-nav-btn">Home</a>
+        <a href="/history" class="history-nav-btn">History</a>
+        <a href="/logout" class="history-nav-btn">Log out</a>
+    </div>
+</div>
+
+<div class="container">
+    <div style="margin-bottom:32px;">
+        <h1 class="result-title">Account Settings</h1>
+        <p class="result-sub">Manage your profile, password and account.</p>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+            <div class="auth-{{ category }}" style="margin-bottom:16px;padding:12px 16px;border-radius:8px;font-size:13px;font-weight:500;
+                {% if category == 'success' %}background:#f0fdf4;border:1px solid #bbf7d0;color:#15803d;
+                {% else %}background:#fef2f2;border:1px solid #fecaca;color:#dc2626;{% endif %}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endwith %}
+
+    <!-- Stats -->
+    <div class="top-row" style="margin-bottom:16px;">
+        <div class="stat-card">
+            <div class="stat-icon">📋</div>
+            <div class="stat-num" style="color:#d97706;">{{ total }}</div>
+            <div class="stat-label">Total Analyses</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">📅</div>
+            <div class="stat-num" style="color:#d97706;font-size:16px;">{{ current_user.created_at.strftime('%b %Y') }}</div>
+            <div class="stat-label">Member Since</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">✉</div>
+            <div class="stat-num" style="color:#d97706;font-size:13px;font-weight:600;">{{ current_user.email[:20] }}{% if current_user.email|length > 20 %}...{% endif %}</div>
+            <div class="stat-label">Email</div>
+        </div>
+    </div>
+
+    <!-- Update Profile -->
+    <div class="section-card">
+        <div class="section-header amber-header">
+            <span class="section-icon">✎</span> Profile Information
+        </div>
+        <form method="POST" action="/account/update">
+            <input type="hidden" name="action" value="update_profile">
+            <div class="auth-field">
+                <label class="auth-label">Full Name</label>
+                <input type="text" name="name" class="auth-input" value="{{ current_user.name }}" required>
+            </div>
+            <div class="auth-field" style="margin-top:12px;">
+                <label class="auth-label">Email Address</label>
+                <input type="email" name="email" class="auth-input" value="{{ current_user.email }}" required>
+            </div>
+            <button type="submit" class="copy-btn" style="margin-top:16px;">Save Changes</button>
+        </form>
+    </div>
+
+    <!-- Change Password -->
+    <div class="section-card">
+        <div class="section-header amber-header">
+            <span class="section-icon">🔒</span> Change Password
+        </div>
+        <form method="POST" action="/account/update">
+            <input type="hidden" name="action" value="change_password">
+            <div class="auth-field">
+                <label class="auth-label">Current Password</label>
+                <div class="password-wrap">
+                    <input type="password" name="current_password" id="cp1" class="auth-input" placeholder="Your current password" required>
+                    <button type="button" class="eye-btn" onclick="togglePw('cp1',this)">👁</button>
+                </div>
+            </div>
+            <div class="auth-field" style="margin-top:12px;">
+                <label class="auth-label">New Password</label>
+                <div class="password-wrap">
+                    <input type="password" name="new_password" id="cp2" class="auth-input" placeholder="New password (8+ chars)" required>
+                    <button type="button" class="eye-btn" onclick="togglePw('cp2',this)">👁</button>
+                </div>
+            </div>
+            <div class="auth-field" style="margin-top:12px;">
+                <label class="auth-label">Confirm New Password</label>
+                <div class="password-wrap">
+                    <input type="password" name="confirm_password" id="cp3" class="auth-input" placeholder="Repeat new password" required>
+                    <button type="button" class="eye-btn" onclick="togglePw('cp3',this)">👁</button>
+                </div>
+            </div>
+            <button type="submit" class="copy-btn" style="margin-top:16px;">Change Password</button>
+        </form>
+    </div>
+
+    <!-- Danger Zone -->
+    <div class="section-card" style="border-color:#fecaca;">
+        <div class="section-header red-header">
+            <span class="section-icon">⚠</span> Danger Zone
+        </div>
+        <p style="font-size:13px;color:#78716c;margin-bottom:16px;">Permanently delete your account and all your analysis history. This cannot be undone.</p>
+        <form method="POST" action="/account/update" onsubmit="return confirm('Are you sure? This will permanently delete your account and all your data.')">
+            <input type="hidden" name="action" value="delete_account">
+            <button type="submit" class="delete-btn">Delete My Account</button>
+        </form>
+    </div>
+
+    <a href="/" class="back-btn">← Back to home</a>
+</div>
+
+<script>
+function togglePw(id, btn) {
+    const input = document.getElementById(id);
+    input.type = input.type === 'password' ? 'text' : 'password';
+    btn.textContent = input.type === 'password' ? '👁' : '🙈';
+}
+</script>
+</body>
+</html>

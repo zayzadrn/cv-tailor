@@ -218,6 +218,55 @@ IMPORTANT: Use ONLY the section headings listed above. Do not add any other text
 
     return render_template('result.html', result=result)
 
+@app.route('/account')
+@login_required
+def account():
+    analyses = Analysis.query.filter_by(user_id=current_user.id).all()
+    return render_template('account.html', total=len(analyses))
+
+@app.route('/account/update', methods=['POST'])
+@login_required
+def update_account():
+    action = request.form.get('action')
+
+    if action == 'update_profile':
+        name = request.form.get('name').strip()
+        email = request.form.get('email').strip().lower()
+        if email != current_user.email:
+            if User.query.filter_by(email=email).first():
+                flash('That email is already in use.', 'error')
+                return redirect(url_for('account'))
+        current_user.name = name
+        current_user.email = email
+        db.session.commit()
+        flash('Profile updated successfully.', 'success')
+
+    elif action == 'change_password':
+        current_pw = request.form.get('current_password')
+        new_pw = request.form.get('new_password')
+        confirm_pw = request.form.get('confirm_password')
+        if not bcrypt.check_password_hash(current_user.password, current_pw):
+            flash('Current password is incorrect.', 'error')
+            return redirect(url_for('account'))
+        if new_pw != confirm_pw:
+            flash('New passwords do not match.', 'error')
+            return redirect(url_for('account'))
+        if len(new_pw) < 8:
+            flash('New password must be at least 8 characters.', 'error')
+            return redirect(url_for('account'))
+        current_user.password = bcrypt.generate_password_hash(new_pw).decode('utf-8')
+        db.session.commit()
+        flash('Password changed successfully.', 'success')
+
+    elif action == 'delete_account':
+        Analysis.query.filter_by(user_id=current_user.id).delete()
+        db.session.delete(current_user)
+        db.session.commit()
+        logout_user()
+        return redirect(url_for('index'))
+
+    return redirect(url_for('account'))
+
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
