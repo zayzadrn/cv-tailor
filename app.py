@@ -53,6 +53,10 @@ def extract_text_from_pdf(pdf_file):
     return text
 
 # Routes
+@app.route('/health')
+def health():
+    return 'OK', 200
+
 @app.route('/')
 def index():
     return render_template('index.html')
