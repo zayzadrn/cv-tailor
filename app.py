@@ -9,6 +9,7 @@ from flask_bcrypt import Bcrypt
 from flask_mail import Mail, Message
 from itsdangerous import URLSafeTimedSerializer
 from datetime import datetime
+from sqlalchemy import text
 
 load_dotenv()
 
@@ -50,6 +51,15 @@ class Analysis(db.Model):
 
 with app.app_context():
     db.create_all()
+
+    try:
+        db.session.execute(
+            text("ALTER TABLE user ADD COLUMN pending_email VARCHAR(150)")
+        )
+        db.session.commit()
+        print("pending_email column added")
+    except Exception as e:
+        print("Migration skipped:", e)
 
 @login_manager.user_loader
 def load_user(user_id):
