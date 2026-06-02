@@ -4,28 +4,34 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Account — CVTailor</title>
-    <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
     <link rel="stylesheet" href="/static/style.css">
+    <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
 </head>
 <body>
-<div class="nav">
+<nav class="nav">
     <div class="nav-logo">CV<span>Tailor</span></div>
     <div style="display:flex;gap:10px;align-items:center;">
-        <a href="/" class="history-nav-btn">Home</a>
-        <a href="/history" class="history-nav-btn">History</a>
-        <a href="/logout" class="history-nav-btn">Log out</a>
+        {% if current_user.is_authenticated %}
+            <span class="nav-name">Hi, {{ current_user.name.split()[0] }}</span>
+            <a href="/history" class="history-nav-btn">History</a>
+            <a href="/account" class="history-nav-btn">Account</a>
+            <a href="/logout" class="history-nav-btn">Log out</a>
+        {% else %}
+            <a href="/login" class="history-nav-btn">Log in</a>
+            <a href="/signup" class="nav-badge" style="text-decoration:none;">Sign up free</a>
+        {% endif %}
     </div>
-</div>
+</nav>
 
 <div class="container">
     <div style="margin-bottom:32px;">
         <h1 class="result-title">Account Settings</h1>
-        <p class="result-sub">Manage your profile, password and account.</p>
+        <p class="result-sub">Manage your profile, email, password and account.</p>
     </div>
 
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% for category, message in messages %}
-            <div class="auth-{{ category }}" style="margin-bottom:16px;padding:12px 16px;border-radius:8px;font-size:13px;font-weight:500;
+            <div style="margin-bottom:16px;padding:12px 16px;border-radius:8px;font-size:13px;font-weight:500;
                 {% if category == 'success' %}background:#f0fdf4;border:1px solid #bbf7d0;color:#15803d;
                 {% else %}background:#fef2f2;border:1px solid #fecaca;color:#dc2626;{% endif %}">
                 {{ message }}
@@ -47,27 +53,50 @@
         </div>
         <div class="stat-card">
             <div class="stat-icon">✉</div>
-            <div class="stat-num" style="color:#d97706;font-size:13px;font-weight:600;">{{ current_user.email[:20] }}{% if current_user.email|length > 20 %}...{% endif %}</div>
-            <div class="stat-label">Email</div>
+            <div class="stat-num" style="color:#d97706;font-size:13px;font-weight:600;word-break:break-all;">{{ current_user.email }}</div>
+            <div class="stat-label">Current Email</div>
         </div>
     </div>
 
-    <!-- Update Profile -->
+    <!-- Update Name -->
     <div class="section-card">
         <div class="section-header amber-header">
-            <span class="section-icon">✎</span> Profile Information
+            <span class="section-icon">✎</span> Update Name
         </div>
         <form method="POST" action="/account/update">
-            <input type="hidden" name="action" value="update_profile">
+            <input type="hidden" name="action" value="update_name">
             <div class="auth-field">
                 <label class="auth-label">Full Name</label>
                 <input type="text" name="name" class="auth-input" value="{{ current_user.name }}" required>
             </div>
-            <div class="auth-field" style="margin-top:12px;">
-                <label class="auth-label">Email Address</label>
-                <input type="email" name="email" class="auth-input" value="{{ current_user.email }}" required>
+            <button type="submit" class="copy-btn" style="margin-top:14px;">Save Name</button>
+        </form>
+    </div>
+
+    <!-- Change Email -->
+    <div class="section-card">
+        <div class="section-header amber-header">
+            <span class="section-icon">✉</span> Change Email
+        </div>
+        <p style="font-size:12px;color:#a8a29e;margin-bottom:16px;">A verification link will be sent to your new email. Your email won't change until you click the link.</p>
+        <form method="POST" action="/account/update">
+            <input type="hidden" name="action" value="change_email">
+            <div class="auth-field">
+                <label class="auth-label">New Email Address</label>
+                <input type="email" name="new_email" class="auth-input" placeholder="your@newemail.com" required>
             </div>
-            <button type="submit" class="copy-btn" style="margin-top:16px;">Save Changes</button>
+            <div class="auth-field" style="margin-top:12px;">
+                <label class="auth-label">Confirm New Email</label>
+                <input type="email" name="confirm_email" class="auth-input" placeholder="Repeat new email" required>
+            </div>
+            <div class="auth-field" style="margin-top:12px;">
+                <label class="auth-label">Your Current Password</label>
+                <div class="password-wrap">
+                    <input type="password" name="password" id="ep1" class="auth-input" placeholder="Confirm it's you" required>
+                    <button type="button" class="eye-btn" onclick="togglePw('ep1',this)">👁</button>
+                </div>
+            </div>
+            <button type="submit" class="copy-btn" style="margin-top:14px;">Send Verification Email</button>
         </form>
     </div>
 
@@ -88,7 +117,7 @@
             <div class="auth-field" style="margin-top:12px;">
                 <label class="auth-label">New Password</label>
                 <div class="password-wrap">
-                    <input type="password" name="new_password" id="cp2" class="auth-input" placeholder="New password (8+ chars)" required>
+                    <input type="password" name="new_password" id="cp2" class="auth-input" placeholder="8+ characters" required>
                     <button type="button" class="eye-btn" onclick="togglePw('cp2',this)">👁</button>
                 </div>
             </div>
@@ -99,7 +128,7 @@
                     <button type="button" class="eye-btn" onclick="togglePw('cp3',this)">👁</button>
                 </div>
             </div>
-            <button type="submit" class="copy-btn" style="margin-top:16px;">Change Password</button>
+            <button type="submit" class="copy-btn" style="margin-top:14px;">Change Password</button>
         </form>
     </div>
 
