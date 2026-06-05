@@ -938,3 +938,47 @@ textarea::placeholder { color: #d6d3d1; }
         margin-bottom: 8px;
     }
 }
+
+a.nav-logo {
+    text-decoration: none;
+    color: #1a1a1a;
+}
+
+a.nav-logo span { color: #d97706; }
+
+.or-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 20px 0;
+    color: #d6d3d1;
+    font-size: 12px;
+}
+
+.or-divider::before,
+.or-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #e8e6e0;
+}
+
+.google-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    padding: 12px;
+    background: #faf9f6;
+    border: 1px solid #e8e6e0;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #1a1a1a;
+    text-decoration: none;
+    transition: background 0.15s;
+    box-sizing: border-box;
+}
+
+.google-btn:hover { background: #f0eee8; }git add .

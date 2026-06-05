@@ -1,17 +1,19 @@
 import os
 import fitz
-import resend
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, session
 from anthropic import Anthropic
 from dotenv import load_dotenv
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from flask_bcrypt import Bcrypt
+from flask_dance.contrib.google import make_google_blueprint, google
+import resend
 from itsdangerous import URLSafeTimedSerializer
 from datetime import datetime
-from sqlalchemy import text
 
 load_dotenv()
+
+os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///cvtailor.db'
@@ -25,13 +27,22 @@ login_manager.login_view = 'login'
 client = Anthropic()
 serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
 
+# Google OAuth blueprint
+google_bp = make_google_blueprint(
+    client_id=os.environ.get('GOOGLE_CLIENT_ID'),
+    client_secret=os.environ.get('GOOGLE_CLIENT_SECRET'),
+    scope=['openid', 'https://www.googleapis.com/auth/userinfo.email', 'https://www.googleapis.com/auth/userinfo.profile'],
+    redirect_to='google_login'
+)
+app.register_blueprint(google_bp, url_prefix='/login')
+
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(150), unique=True, nullable=False)
     name = db.Column(db.String(150), nullable=False)
-    password = db.Column(db.String(200), nullable=False)
+    password = db.Column(db.String(200), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    pending_email = db.Column(db.String(150), nullable=True)
+    google_id = db.Column(db.String(200), nullable=True)
     analyses = db.relationship('Analysis', backref='user', lazy=True)
 
 class Analysis(db.Model):
@@ -44,8 +55,11 @@ class Analysis(db.Model):
 
 with app.app_context():
     db.create_all()
-
-    # Safe migration for Railway SQLite
+    try:
+        db.session.execute(db.text("ALTER TABLE user ADD COLUMN google_id VARCHAR(200)"))
+        db.session.commit()
+    except Exception:
+        pass
     try:
         db.session.execute(db.text("ALTER TABLE user ADD COLUMN pending_email VARCHAR(150)"))
         db.session.commit()
@@ -54,11 +68,8 @@ with app.app_context():
 
 @login_manager.user_loader
 def load_user(user_id):
-    try:
-        return db.session.get(User, int(user_id))
-    except Exception:
-        return None
-    
+    return db.session.get(User, int(user_id))
+
 def extract_text_from_pdf(pdf_file):
     pdf_bytes = pdf_file.read()
     doc = fitz.open(stream=pdf_bytes, filetype="pdf")
@@ -85,7 +96,7 @@ Click this link to confirm your new email address:
 
 This link expires in 1 hour.
 
-If you didn't request this, ignore this email — your account is safe.
+If you didn't request this, ignore this email.
 
 CVTailor Team"""
         })
@@ -101,6 +112,36 @@ def health():
 @app.route('/')
 def index():
     return render_template('index.html')
+
+@app.route('/google-login')
+def google_login():
+    if not google.authorized:
+        return redirect(url_for('google.login'))
+    try:
+        resp = google.get('/oauth2/v2/userinfo')
+        if not resp.ok:
+            flash('Failed to get info from Google.', 'error')
+            return redirect(url_for('login'))
+        info = resp.json()
+        google_id = info['id']
+        email = info['email']
+        name = info.get('name', email.split('@')[0])
+        user = User.query.filter_by(email=email).first()
+        if not user:
+            user = User.query.filter_by(google_id=google_id).first()
+        if not user:
+            user = User(email=email, name=name, google_id=google_id)
+            db.session.add(user)
+            db.session.commit()
+        elif not user.google_id:
+            user.google_id = google_id
+            db.session.commit()
+        login_user(user)
+        return redirect(url_for('index'))
+    except Exception as e:
+        print(f"Google login error: {e}")
+        flash('Google login failed. Please try again.', 'error')
+        return redirect(url_for('login'))
 
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
@@ -136,7 +177,7 @@ def login():
         email = request.form.get('email').strip().lower()
         password = request.form.get('password')
         user = User.query.filter_by(email=email).first()
-        if user and bcrypt.check_password_hash(user.password, password):
+        if user and user.password and bcrypt.check_password_hash(user.password, password):
             login_user(user)
             return redirect(url_for('index'))
         flash('Incorrect email or password.', 'error')
@@ -195,7 +236,9 @@ def update_account():
         new_email = request.form.get('new_email', '').strip().lower()
         confirm_email = request.form.get('confirm_email', '').strip().lower()
         password = request.form.get('password', '')
-
+        if not current_user.password:
+            flash('Google login accounts cannot change email here.', 'error')
+            return redirect(url_for('account'))
         if not bcrypt.check_password_hash(current_user.password, password):
             flash('Incorrect password.', 'error')
             return redirect(url_for('account'))
@@ -208,21 +251,16 @@ def update_account():
         if User.query.filter_by(email=new_email).first():
             flash('That email is already used by another account.', 'error')
             return redirect(url_for('account'))
-
-        current_user.pending_email = new_email
-        db.session.commit()
-
-        try:
-            send_email_verification(current_user, new_email)
-            flash(f'Verification email sent to {new_email}.', 'success')
-        except Exception as e:
-            print("Email failed:", e)
-            flash('Email could not be sent, but request saved.', 'error')
+        send_email_verification(current_user, new_email)
+        flash(f'Verification email sent to {new_email}.', 'success')
 
     elif action == 'change_password':
         current_pw = request.form.get('current_password')
         new_pw = request.form.get('new_password')
         confirm_pw = request.form.get('confirm_password')
+        if not current_user.password:
+            flash('Google login accounts cannot set a password here yet.', 'error')
+            return redirect(url_for('account'))
         if not bcrypt.check_password_hash(current_user.password, current_pw):
             flash('Current password is incorrect.', 'error')
             return redirect(url_for('account'))
@@ -230,7 +268,7 @@ def update_account():
             flash('New passwords do not match.', 'error')
             return redirect(url_for('account'))
         if len(new_pw) < 8:
-            flash('New password must be at least 8 characters.', 'error')
+            flash('Password must be at least 8 characters.', 'error')
             return redirect(url_for('account'))
         current_user.password = bcrypt.generate_password_hash(new_pw).decode('utf-8')
         db.session.commit()
@@ -251,9 +289,8 @@ def verify_email_change(token):
         data = serializer.loads(token, salt='email-change', max_age=3600)
         user = db.session.get(User, data['user_id'])
         new_email = data['new_email']
-        if user and user.pending_email == new_email:
+        if user:
             user.email = new_email
-            user.pending_email = None
             db.session.commit()
             flash('Email address updated successfully!', 'success')
             if current_user.is_authenticated:
