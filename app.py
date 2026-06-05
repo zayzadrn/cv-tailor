@@ -1,12 +1,12 @@
 import os
 import fitz
+import resend
 from flask import Flask, render_template, request, redirect, url_for, flash
 from anthropic import Anthropic
 from dotenv import load_dotenv
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from flask_bcrypt import Bcrypt
-from flask_mail import Mail, Message
 from itsdangerous import URLSafeTimedSerializer
 from datetime import datetime
 from sqlalchemy import text
@@ -17,18 +17,11 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///cvtailor.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key')
-app.config['MAIL_SERVER'] = 'smtp.gmail.com'
-app.config['MAIL_PORT'] = 587
-app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME')
-app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
-app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_USERNAME')
 
 db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
-mail = Mail(app)
 client = Anthropic()
 serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
 
@@ -52,19 +45,20 @@ class Analysis(db.Model):
 with app.app_context():
     db.create_all()
 
+    # Safe migration for Railway SQLite
     try:
-        db.session.execute(
-            text("ALTER TABLE user ADD COLUMN pending_email VARCHAR(150)")
-        )
+        db.session.execute(db.text("ALTER TABLE user ADD COLUMN pending_email VARCHAR(150)"))
         db.session.commit()
-        print("pending_email column added")
-    except Exception as e:
-        print("Migration skipped:", e)
+    except Exception:
+        pass
 
 @login_manager.user_loader
 def load_user(user_id):
-    return db.session.get(User, int(user_id))
-
+    try:
+        return db.session.get(User, int(user_id))
+    except Exception:
+        return None
+    
 def extract_text_from_pdf(pdf_file):
     pdf_bytes = pdf_file.read()
     doc = fitz.open(stream=pdf_bytes, filetype="pdf")
@@ -77,10 +71,12 @@ def send_email_verification(user, new_email):
     token = serializer.dumps({'user_id': user.id, 'new_email': new_email}, salt='email-change')
     verify_url = url_for('verify_email_change', token=token, _external=True)
     try:
-        msg = Message(
-            subject='Confirm your new email — CVTailor',
-            recipients=[new_email],
-            body=f"""Hi {user.name},
+        resend.api_key = os.environ.get('RESEND_API_KEY')
+        resend.Emails.send({
+            'from': 'CVTailor <onboarding@resend.dev>',
+            'to': new_email,
+            'subject': 'Confirm your new email — CVTailor',
+            'text': f"""Hi {user.name},
 
 You requested to change your email address on CVTailor.
 
@@ -92,8 +88,7 @@ This link expires in 1 hour.
 If you didn't request this, ignore this email — your account is safe.
 
 CVTailor Team"""
-        )
-        mail.send(msg)
+        })
         return True
     except Exception as e:
         print(f"Email error: {e}")
@@ -217,11 +212,12 @@ def update_account():
         current_user.pending_email = new_email
         db.session.commit()
 
-        sent = send_email_verification(current_user, new_email)
-        if sent:
-            flash(f'Verification email sent to {new_email}. Click the link to confirm your new email.', 'success')
-        else:
-            flash('Could not send verification email. Please check your email settings.', 'error')
+        try:
+            send_email_verification(current_user, new_email)
+            flash(f'Verification email sent to {new_email}.', 'success')
+        except Exception as e:
+            print("Email failed:", e)
+            flash('Email could not be sent, but request saved.', 'error')
 
     elif action == 'change_password':
         current_pw = request.form.get('current_password')
