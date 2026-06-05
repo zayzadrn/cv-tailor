@@ -17,6 +17,7 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///cvtailor.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key')
+app.config['PREFERRED_URL_SCHEME'] = 'https'
 
 db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
@@ -24,6 +25,7 @@ login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 client = Anthropic()
 serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
+
 
 oauth = OAuth(app)
 google = oauth.register(
