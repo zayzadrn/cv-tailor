@@ -982,3 +982,27 @@ a.nav-logo span { color: #d97706; }
 }
 
 .google-btn:hover { background: #f0eee8; }git add .
+
+.footer {
+    text-align: center;
+    padding: 32px 24px;
+    border-top: 1px solid #e8e6e0;
+    margin-top: 40px;
+}
+
+.footer-links {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    font-size: 12px;
+    color: #a8a29e;
+}
+
+.footer-links a {
+    color: #a8a29e;
+    text-decoration: none;
+    transition: color 0.15s;
+}
+
+.footer-links a:hover { color: #1a1a1a; }

@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Policy — CVTailor</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+</head>
+<body>
+<nav class="nav">
+    <a href="/" class="nav-logo">CV<span>Tailor</span></a>
+    <div style="display:flex;gap:10px;align-items:center;">
+        {% if current_user.is_authenticated %}
+            <a href="/history" class="history-nav-btn">History</a>
+            <a href="/account" class="history-nav-btn">Account</a>
+            <a href="/logout" class="history-nav-btn">Log out</a>
+        {% else %}
+            <a href="/login" class="history-nav-btn">Log in</a>
+            <a href="/signup" class="nav-badge" style="text-decoration:none;">Sign up free</a>
+        {% endif %}
+    </div>
+</nav>
+
+<div class="container">
+    <div style="max-width:680px;margin:0 auto;padding:48px 24px 80px;">
+        <h1 class="result-title">Privacy Policy</h1>
+        <p class="result-sub">Last updated: June 2026</p>
+
+        <div class="section-card" style="margin-top:24px;">
+            <div class="section-header amber-header"><span>1.</span> Who We Are</div>
+            <p class="item-body">CVTailor is an AI-powered CV analysis tool built to help job seekers improve their applications. We are operated as an independent project. For questions, contact us at osmanzadran21@gmail.com.</p>
+        </div>
+
+        <div class="section-card">
+            <div class="section-header amber-header"><span>2.</span> What Data We Collect</div>
+            <div class="item-body">
+                <p style="margin-bottom:10px;">When you use CVTailor we collect:</p>
+                <div class="item-row amber-item">
+                    <div class="item-dot amber-dot"></div>
+                    <div><strong class="item-title">Account information</strong> — your name, email address and password (stored securely and encrypted)</div>
+                </div>
+                <div class="item-row amber-item" style="margin-top:8px;">
+                    <div class="item-dot amber-dot"></div>
+                    <div><strong class="item-title">CV content</strong> — the text of your CV and job descriptions you submit for analysis</div>
+                </div>
+                <div class="item-row amber-item" style="margin-top:8px;">
+                    <div class="item-dot amber-dot"></div>
+                    <div><strong class="item-title">Analysis history</strong> — the results of your CV analyses, saved to your account</div>
+                </div>
+                <div class="item-row amber-item" style="margin-top:8px;">
+                    <div class="item-dot amber-dot"></div>
+                    <div><strong class="item-title">Google account data</strong> — if you sign in with Google, we receive your name and email address from Google</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-card">
+            <div class="section-header amber-header"><span>3.</span> How We Use Your Data</div>
+            <div class="item-body">
+                <p style="margin-bottom:10px;">We use your data to:</p>
+                <div class="item-row green-item">
+                    <div class="item-dot green-dot"></div>
+                    <div>Provide and improve the CV analysis service</div>
+                </div>
+                <div class="item-row green-item" style="margin-top:8px;">
+                    <div class="item-dot green-dot"></div>
+                    <div>Save your analysis history to your account</div>
+                </div>
+                <div class="item-row green-item" style="margin-top:8px;">
+                    <div class="item-dot green-dot"></div>
+                    <div>Send email verification when you change your email address</div>
+                </div>
+                <div class="item-row green-item" style="margin-top:8px;">
+                    <div class="item-dot green-dot"></div>
+                    <div>Authenticate your identity when you log in</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-card">
+            <div class="section-header amber-header"><span>4.</span> AI Processing</div>
+            <p class="item-body">Your CV text and job descriptions are sent to Anthropic's Claude AI API for analysis. Anthropic processes this data according to their own privacy policy. We do not store your raw CV files — only the text extracted from them and the analysis results.</p>
+        </div>
+
+        <div class="section-card">
+            <div class="section-header amber-header"><span>5.</span> Data Sharing</div>
+            <p class="item-body">We do not sell your personal data. We do not share your data with third parties except for the services required to operate CVTailor — Anthropic (AI analysis), Resend (email delivery), and Railway (hosting).</p>
+        </div>
+
+        <div class="section-card">
+            <div class="section-header amber-header"><span>6.</span> Data Retention</div>
+            <p class="item-body">Your data is retained as long as your account exists. You can delete your account and all associated data at any time from your Account Settings page. Deletion is permanent and immediate.</p>
+        </div>
+
+        <div class="section-card">
+            <div class="section-header amber-header"><span>7.</span> Your Rights</div>
+            <div class="item-body">
+                <p style="margin-bottom:10px;">You have the right to:</p>
+                <div class="item-row green-item">
+                    <div class="item-dot green-dot"></div>
+                    <div>Access the data we hold about you</div>
+                </div>
+                <div class="item-row green-item" style="margin-top:8px;">
+                    <div class="item-dot green-dot"></div>
+                    <div>Delete your account and all your data</div>
+                </div>
+                <div class="item-row green-item" style="margin-top:8px;">
+                    <div class="item-dot green-dot"></div>
+                    <div>Update your personal information at any time</div>
+                </div>
+                <div class="item-row green-item" style="margin-top:8px;">
+                    <div class="item-dot green-dot"></div>
+                    <div>Contact us with any privacy concerns at osmanzadran21@gmail.com</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-card">
+            <div class="section-header amber-header"><span>8.</span> Cookies</div>
+            <p class="item-body">CVTailor uses a session cookie to keep you logged in. We do not use tracking or advertising cookies.</p>
+        </div>
+
+        <div class="section-card">
+            <div class="section-header amber-header"><span>9.</span> Changes to This Policy</div>
+            <p class="item-body">We may update this privacy policy from time to time. We will notify users of significant changes by updating the date at the top of this page.</p>
+        </div>
+
+        <a href="/" class="back-btn">← Back to home</a>
+    </div>
+</div>
+</body>
+</html>

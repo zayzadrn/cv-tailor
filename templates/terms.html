@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terms of Service — CVTailor</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+</head>
+<body>
+<nav class="nav">
+    <a href="/" class="nav-logo">CV<span>Tailor</span></a>
+    <div style="display:flex;gap:10px;align-items:center;">
+        {% if current_user.is_authenticated %}
+            <a href="/history" class="history-nav-btn">History</a>
+            <a href="/account" class="history-nav-btn">Account</a>
+            <a href="/logout" class="history-nav-btn">Log out</a>
+        {% else %}
+            <a href="/login" class="history-nav-btn">Log in</a>
+            <a href="/signup" class="nav-badge" style="text-decoration:none;">Sign up free</a>
+        {% endif %}
+    </div>
+</nav>
+
+<div class="container">
+    <div style="max-width:680px;margin:0 auto;padding:48px 24px 80px;">
+        <h1 class="result-title">Terms of Service</h1>
+        <p class="result-sub">Last updated: June 2026</p>
+
+        <div class="section-card" style="margin-top:24px;">
+            <div class="section-header amber-header"><span>1.</span> Acceptance of Terms</div>
+            <p class="item-body">By using CVTailor you agree to these terms. If you do not agree, please do not use the service.</p>
+        </div>
+
+        <div class="section-card">
+            <div class="section-header amber-header"><span>2.</span> What CVTailor Does</div>
+            <p class="item-body">CVTailor is an AI-powered tool that analyses your CV against job descriptions and provides feedback, suggestions, and generated content such as cover letters and LinkedIn summaries. The service is provided for informational purposes only.</p>
+        </div>
+
+        <div class="section-card">
+            <div class="section-header amber-header"><span>3.</span> Your Account</div>
+            <div class="item-body">
+                <div class="item-row amber-item">
+                    <div class="item-dot amber-dot"></div>
+                    <div>You are responsible for keeping your password secure</div>
+                </div>
+                <div class="item-row amber-item" style="margin-top:8px;">
+                    <div class="item-dot amber-dot"></div>
+                    <div>You must provide accurate information when creating an account</div>
+                </div>
+                <div class="item-row amber-item" style="margin-top:8px;">
+                    <div class="item-dot amber-dot"></div>
+                    <div>You must be at least 16 years old to use this service</div>
+                </div>
+                <div class="item-row amber-item" style="margin-top:8px;">
+                    <div class="item-dot amber-dot"></div>
+                    <div>You may delete your account at any time from Account Settings</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-card">
+            <div class="section-header amber-header"><span>4.</span> Your Content</div>
+            <p class="item-body">You retain ownership of any CV content or personal information you submit. By submitting content you grant CVTailor permission to process it using AI to provide the analysis service. You are responsible for ensuring your content does not violate any laws or third party rights.</p>
+        </div>
+
+        <div class="section-card">
+            <div class="section-header amber-header"><span>5.</span> AI Generated Content</div>
+            <p class="item-body">CVTailor uses AI to generate analysis, cover letters, and suggestions. This content is generated automatically and may not always be accurate. You should review and edit all AI-generated content before using it in a job application. CVTailor is not responsible for outcomes resulting from use of AI-generated content.</p>
+        </div>
+
+        <div class="section-card">
+            <div class="section-header amber-header"><span>6.</span> Acceptable Use</div>
+            <div class="item-body">
+                <p style="margin-bottom:10px;">You agree not to:</p>
+                <div class="item-row" style="background:#fef2f2;border:1px solid #fecaca;padding:12px 14px;border-radius:8px;">
+                    <div class="item-dot" style="background:#dc2626;margin-top:5px;flex-shrink:0;"></div>
+                    <div>Use CVTailor for any illegal or harmful purpose</div>
+                </div>
+                <div class="item-row" style="background:#fef2f2;border:1px solid #fecaca;padding:12px 14px;border-radius:8px;margin-top:8px;">
+                    <div class="item-dot" style="background:#dc2626;margin-top:5px;flex-shrink:0;"></div>
+                    <div>Attempt to reverse engineer or copy the service</div>
+                </div>
+                <div class="item-row" style="background:#fef2f2;border:1px solid #fecaca;padding:12px 14px;border-radius:8px;margin-top:8px;">
+                    <div class="item-dot" style="background:#dc2626;margin-top:5px;flex-shrink:0;"></div>
+                    <div>Submit false or misleading information</div>
+                </div>
+                <div class="item-row" style="background:#fef2f2;border:1px solid #fecaca;padding:12px 14px;border-radius:8px;margin-top:8px;">
+                    <div class="item-dot" style="background:#dc2626;margin-top:5px;flex-shrink:0;"></div>
+                    <div>Attempt to overload or disrupt the service</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-card">
+            <div class="section-header amber-header"><span>7.</span> Service Availability</div>
+            <p class="item-body">CVTailor is provided as-is. We do not guarantee the service will be available at all times. We may update, pause, or discontinue the service at any time without notice.</p>
+        </div>
+
+        <div class="section-card">
+            <div class="section-header amber-header"><span>8.</span> Limitation of Liability</div>
+            <p class="item-body">CVTailor is not liable for any outcomes resulting from use of the service, including but not limited to job application results. The service is provided for informational purposes and does not guarantee employment.</p>
+        </div>
+
+        <div class="section-card">
+            <div class="section-header amber-header"><span>9.</span> Contact</div>
+            <p class="item-body">For any questions about these terms please contact us at osmanzadran21@gmail.com.</p>
+        </div>
+
+        <a href="/" class="back-btn">← Back to home</a>
+    </div>
+</div>
+</body>
+</html>
