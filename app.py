@@ -1,19 +1,17 @@
 import os
 import fitz
+import resend
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 from anthropic import Anthropic
 from dotenv import load_dotenv
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from flask_bcrypt import Bcrypt
-from flask_dance.contrib.google import make_google_blueprint, google
-import resend
+from authlib.integrations.flask_client import OAuth
 from itsdangerous import URLSafeTimedSerializer
 from datetime import datetime
 
 load_dotenv()
-
-os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///cvtailor.db'
@@ -27,14 +25,14 @@ login_manager.login_view = 'login'
 client = Anthropic()
 serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
 
-# Google OAuth blueprint
-google_bp = make_google_blueprint(
+oauth = OAuth(app)
+google = oauth.register(
+    name='google',
     client_id=os.environ.get('GOOGLE_CLIENT_ID'),
     client_secret=os.environ.get('GOOGLE_CLIENT_SECRET'),
-    scope=['openid', 'https://www.googleapis.com/auth/userinfo.email', 'https://www.googleapis.com/auth/userinfo.profile'],
-    redirect_to='google_login'
+    server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
+    client_kwargs={'scope': 'openid email profile'}
 )
-app.register_blueprint(google_bp, url_prefix='/login')
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -55,16 +53,12 @@ class Analysis(db.Model):
 
 with app.app_context():
     db.create_all()
-    try:
-        db.session.execute(db.text("ALTER TABLE user ADD COLUMN google_id VARCHAR(200)"))
-        db.session.commit()
-    except Exception:
-        pass
-    try:
-        db.session.execute(db.text("ALTER TABLE user ADD COLUMN pending_email VARCHAR(150)"))
-        db.session.commit()
-    except Exception:
-        pass
+    for col, typedef in [('google_id', 'VARCHAR(200)'), ('pending_email', 'VARCHAR(150)')]:
+        try:
+            db.session.execute(db.text(f"ALTER TABLE user ADD COLUMN {col} {typedef}"))
+            db.session.commit()
+        except Exception:
+            pass
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -113,19 +107,23 @@ def health():
 def index():
     return render_template('index.html')
 
-@app.route('/google-login')
-def google_login():
-    if not google.authorized:
-        return redirect(url_for('google.login'))
+@app.route('/auth/google')
+def google_auth():
+    redirect_uri = url_for('google_callback', _external=True)
+    return google.authorize_redirect(redirect_uri)
+
+@app.route('/auth/google/callback')
+def google_callback():
     try:
-        resp = google.get('/oauth2/v2/userinfo')
-        if not resp.ok:
-            flash('Failed to get info from Google.', 'error')
-            return redirect(url_for('login'))
-        info = resp.json()
-        google_id = info['id']
-        email = info['email']
-        name = info.get('name', email.split('@')[0])
+        token = google.authorize_access_token()
+        userinfo = token.get('userinfo')
+        if not userinfo:
+            userinfo = google.get('userinfo').json()
+
+        google_id = userinfo.get('sub')
+        email = userinfo.get('email')
+        name = userinfo.get('name', email.split('@')[0])
+
         user = User.query.filter_by(email=email).first()
         if not user:
             user = User.query.filter_by(google_id=google_id).first()
@@ -136,10 +134,11 @@ def google_login():
         elif not user.google_id:
             user.google_id = google_id
             db.session.commit()
+
         login_user(user)
         return redirect(url_for('index'))
     except Exception as e:
-        print(f"Google login error: {e}")
+        print(f"Google callback error: {e}")
         flash('Google login failed. Please try again.', 'error')
         return redirect(url_for('login'))
 
@@ -259,7 +258,7 @@ def update_account():
         new_pw = request.form.get('new_password')
         confirm_pw = request.form.get('confirm_password')
         if not current_user.password:
-            flash('Google login accounts cannot set a password here yet.', 'error')
+            flash('Google login accounts cannot change password here yet.', 'error')
             return redirect(url_for('account'))
         if not bcrypt.check_password_hash(current_user.password, current_pw):
             flash('Current password is incorrect.', 'error')
@@ -385,14 +384,6 @@ IMPORTANT: Use ONLY the section headings listed above."""
 
     return render_template('result.html', result=result)
 
-@app.errorhandler(404)
-def page_not_found(e):
-    return render_template('404.html'), 404
-
-@app.errorhandler(500)
-def server_error(e):
-    return render_template('404.html'), 500
-
 @app.route('/privacy')
 def privacy():
     return render_template('privacy.html')
@@ -400,6 +391,14 @@ def privacy():
 @app.route('/terms')
 def terms():
     return render_template('terms.html')
+
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template('404.html'), 404
+
+@app.errorhandler(500)
+def server_error(e):
+    return render_template('404.html'), 500
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
