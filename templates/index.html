@@ -11,7 +11,7 @@
 
 <!-- NAV -->
 <nav class="nav">
-    <div class="nav-logo">CV<span>Tailor</span></div>
+    <a href="/" class="nav-logo">CV<span>Tailor</span></a>
     <div style="display:flex;gap:10px;align-items:center;">
         {% if current_user.is_authenticated %}
             <span class="nav-name">Hi, {{ current_user.name.split()[0] }}</span>
@@ -209,6 +209,5 @@ function switchMode(mode) {
         btns[1].classList.add('active');
     }
 }
-</script>
 </body>
 </html>
