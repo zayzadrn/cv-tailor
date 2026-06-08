@@ -202,8 +202,14 @@ def google_auth():
 
     redirect_uri = url_for(
         "google_callback",
-        _external=True
+        _external=True,
+        _scheme="https"
     )
+
+    print("=" * 60)
+    print("GOOGLE REDIRECT URI:")
+    print(redirect_uri)
+    print("=" * 60)
 
     return google.authorize_redirect(redirect_uri)
 
