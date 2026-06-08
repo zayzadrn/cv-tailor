@@ -262,16 +262,19 @@ def google_callback():
 
         return redirect(url_for("index"))
 
-    except Exception as e:
+  except Exception as e:
+    import traceback
 
-        print("Google callback error:", e)
+    traceback.print_exc()
 
-        flash(
-            "Google login failed. Please try again.",
-            "error"
-        )
+    print("=" * 60)
+    print("GOOGLE CALLBACK ERROR")
+    print(e)
+    print("=" * 60)
 
-        return redirect(url_for("login"))
+    flash(f"Google login failed: {e}", "error")
+
+    return redirect(url_for("login"))
 
 
 @app.route("/signup", methods=["GET", "POST"])
