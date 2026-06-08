@@ -482,14 +482,6 @@ def update_account():
         db.session.commit()
 
         flash('Password changed successfully.', 'success')
-               if len(new_pw) < 8:
-            flash('Password must be at least 8 characters.', 'error')
-            return redirect(url_for('account'))
-
-        current_user.password = bcrypt.generate_password_hash(new_pw).decode('utf-8')
-        db.session.commit()
-
-        flash('Password changed successfully.', 'success')
 
     elif action == 'delete_account':
         Analysis.query.filter_by(user_id=current_user.id).delete()
