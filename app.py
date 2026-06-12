@@ -535,7 +535,6 @@ def verify_email_change(token):
 
     return redirect(url_for('index'))
 
-
 @app.route('/analyse', methods=['POST'])
 @login_required
 def analyse():
@@ -554,11 +553,15 @@ def analyse():
         'friendly': 'Write in a warm, friendly and approachable tone.',
         'bold': 'Write in a bold, confident and assertive tone that stands out.'
     }
+    print("=" * 50)
+    print("CV length:", len(cv_text))
+    print("Job description length:", len(job_description))
+    print("=" * 50)
 
     try:
         message = client.messages.create(
-            model="claude-opus-4-5",
-            max_tokens=2000,
+            model="claude-sonnet-4",
+            max_tokens=1200,
             messages=[
                 {
                     "role": "user",
