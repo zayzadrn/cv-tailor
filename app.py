@@ -560,7 +560,7 @@ def analyse():
 
     try:
         message = client.messages.create(
-            model="claude-sonnet-4",
+            model="claude-3-5-sonnet-latest",
             max_tokens=1200,
             messages=[
                 {
