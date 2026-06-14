@@ -218,7 +218,6 @@ def google_auth():
 def google_callback():
 
     try:
-
         token = google.authorize_access_token()
 
         userinfo = token.get("userinfo")
@@ -228,34 +227,28 @@ def google_callback():
 
         google_id = userinfo["sub"]
         email = userinfo["email"]
-        name = userinfo.get(
-            "name",
-            email.split("@")[0]
-        )
+        name = userinfo.get("name", email.split("@")[0])
 
-        user = User.query.filter_by(
-            google_id=google_id
-        ).first()
+        # 1. Try find user by Google ID
+        user = User.query.filter_by(google_id=google_id).first()
 
+        # 2. If not found, try email
         if not user:
-            user = User.query.filter_by(
-                email=email
-            ).first()
+            user = User.query.filter_by(email=email).first()
 
+            # If user exists but no google_id, link it
+            if user and not user.google_id:
+                user.google_id = google_id
+                db.session.commit()
+
+        # 3. If still no user, create new one
         if not user:
-
             user = User(
                 email=email,
                 name=name,
                 google_id=google_id
             )
-
             db.session.add(user)
-            db.session.commit()
-
-        elif not user.google_id:
-
-            user.google_id = google_id
             db.session.commit()
 
         login_user(user)
@@ -264,18 +257,11 @@ def google_callback():
 
     except Exception as e:
         import traceback
-
         traceback.print_exc()
 
-        print("=" * 60)
-        print("GOOGLE CALLBACK ERROR")
-        print(e)
-        print("=" * 60)
-
-        flash(f"Google login failed: {e}", "error")
+        flash(f"Google login failed: {str(e)}", "error")
 
         return redirect(url_for("login"))
-
 @app.route("/signup", methods=["GET", "POST"])
 def signup():
 
@@ -560,7 +546,7 @@ def analyse():
 
     try:
         message = client.messages.create(
-            model="claude-3-5-sonnet-latest",
+            model="claude-3-5-sonnet-20240620",
             max_tokens=1200,
             messages=[
                 {
