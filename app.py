@@ -26,7 +26,7 @@ bcrypt = Bcrypt(app)
 login_manager = LoginManager(app)
 login_manager.login_view = "login"
 
-client = Anthropic()
+client = Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
 
 serializer = URLSafeTimedSerializer(app.config["SECRET_KEY"])
 
@@ -546,7 +546,7 @@ def analyse():
 
     try:
         message = client.messages.create(
-            model="claude-3-5-sonnet-20240620",
+            model="claude-opus-4-8",
             max_tokens=1200,
             messages=[
                 {
