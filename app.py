@@ -534,7 +534,6 @@ def analyse():
     tone = request.form.get('tone', 'professional')
 
     cv_text = ""
-
     if 'cv' in request.files and request.files['cv'].filename:
         cv_text = extract_text_from_pdf(request.files['cv'])
     elif request.form.get('cv_text'):
@@ -545,41 +544,57 @@ def analyse():
         'friendly': 'Write in a warm, friendly and approachable tone.',
         'bold': 'Write in a bold, confident and assertive tone that stands out.'
     }
-    print("=" * 50)
-    print("CV length:", len(cv_text))
-    print("Job description length:", len(job_description))
-    print("=" * 50)
 
     try:
         message = client.messages.create(
             model="claude-opus-4-8",
-            max_tokens=1200,
+            max_tokens=2000,
             messages=[
                 {
                     "role": "user",
-                    "content": f"""You are a professional career coach and CV expert.
+                    "content": f"""You are a brutally honest career coach. Do NOT be nice or encouraging. Be direct, specific and critical.
 
-Analyse this CV against the job description.
-
-You MUST use EXACTLY these headings:
+Analyse this CV against the job description and respond using EXACTLY these headings in EXACTLY this order:
 
 JOB TITLE
-MATCH SCORE
-QUICK WINS
-STRENGTHS
-MISSING SKILLS
-IMPROVED BULLETS
-LINKEDIN SUMMARY
-COVER LETTER
+Write only the exact job title from the job description on one line.
 
-{tone_instructions[tone]}
+MATCH SCORE
+Write only a number followed by % on one line. Be harsh and realistic. Most CVs score 20-50%. Only score above 70% if the CV is a genuinely strong match. Example: 35%
+
+QUICK WINS
+- Write exactly 3 specific actionable things the candidate must fix immediately. Be direct. No fluff.
+- Each bullet starts with a dash and is under 20 words.
+- Focus on the biggest gaps between the CV and job description.
+
+STRENGTHS
+- Write exactly 3 genuine strengths that actually match the job description. If there are fewer than 3 real strengths, say so honestly.
+- Format: "Title: specific explanation referencing the CV and job"
+- Each bullet starts with a dash.
+
+MISSING SKILLS
+- List every skill, tool, qualification or experience mentioned in the job description that is missing or weak in the CV.
+- Each item starts with a dash and is 2-5 words max.
+- Be thorough — list everything missing, even minor things.
+
+IMPROVED BULLETS
+- Rewrite exactly 3 of the weakest CV bullet points to be stronger, more specific and achievement-focused.
+- Each starts with a dash and includes a measurable result where possible.
+- Do not include the original bullet.
+
+LINKEDIN SUMMARY
+Write a 3-4 sentence LinkedIn summary for this candidate targeting this specific role. Make it honest and specific to their actual experience. No generic phrases.
+
+COVER LETTER
+{tone_instructions[tone]} Write a full, specific cover letter for this exact role. Reference specific details from both the CV and job description. Do not use generic phrases like "I am a motivated individual". Make it sound like a real human wrote it.
 
 CV:
 {cv_text}
 
 JOB DESCRIPTION:
 {job_description}
-"""
+
+CRITICAL: Use ONLY the exact headings above. The MATCH SCORE line must contain ONLY a number and % sign, nothing else."""
                 }
             ]
         )
@@ -591,23 +606,45 @@ JOB DESCRIPTION:
         flash("AI analysis failed. Please try again.", "error")
         return redirect(url_for('index'))
 
+    # Parse job title and match score
     job_title = "Unknown Role"
     match_score = "0%"
-
-    for line in result.splitlines():
+    lines = result.splitlines()
+    
+    in_title_section = False
+    in_score_section = False
+    
+    for line in lines:
         stripped = line.strip()
-
-        if stripped.endswith("%"):
-            match_score = stripped
-
-        if (
-            stripped
-            and not stripped.startswith("-")
-            and "JOB TITLE" not in stripped.upper()
-            and job_title == "Unknown Role"
-            and len(stripped) < 100
-        ):
+        
+        if stripped.upper() == 'JOB TITLE':
+            in_title_section = True
+            in_score_section = False
+            continue
+        
+        if stripped.upper() == 'MATCH SCORE':
+            in_score_section = True
+            in_title_section = False
+            continue
+        
+        if stripped.upper() in ['QUICK WINS', 'STRENGTHS', 'MISSING SKILLS', 'IMPROVED BULLETS', 'LINKEDIN SUMMARY', 'COVER LETTER']:
+            in_title_section = False
+            in_score_section = False
+            continue
+        
+        if in_title_section and stripped and job_title == "Unknown Role":
             job_title = stripped
+            in_title_section = False
+        
+        if in_score_section and stripped:
+            import re
+            score_match = re.search(r'(\d+)\s*%', stripped)
+            if score_match:
+                match_score = score_match.group(1) + '%'
+                in_score_section = False
+
+    print(f"Parsed job_title: {job_title}")
+    print(f"Parsed match_score: {match_score}")
 
     analysis = Analysis(
         job_title=job_title,
@@ -615,12 +652,10 @@ JOB DESCRIPTION:
         result=result,
         user_id=current_user.id
     )
-
     db.session.add(analysis)
     db.session.commit()
 
     return render_template('result.html', result=result)
-
 
 @app.route('/privacy')
 def privacy():
