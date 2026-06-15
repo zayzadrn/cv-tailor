@@ -1,4 +1,9 @@
 import os
+print("🚨 APP.PY LOADED 🚨", flush=True)
+print("FILE:", __file__, flush=True)
+print("ENV TEST:", os.environ.get("ANTHROPIC_API_KEY") is not None, flush=True)
+
+import os
 import fitz
 import resend
 from flask import Flask, render_template, request, redirect, url_for, flash, session
