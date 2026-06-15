@@ -548,45 +548,72 @@ def analyse():
     try:
         message = client.messages.create(
             model="claude-opus-4-8",
-            max_tokens=2000,
+            max_tokens=4000,
             messages=[
                 {
                     "role": "user",
-                    "content": f"""You are a brutally honest career coach. Do NOT be nice or encouraging. Be direct, specific and critical.
+                    "content": f"""You are a world-class career strategist who has helped thousands of professionals land roles at top companies including Goldman Sachs, Google, McKinsey and Fortune 500 firms. You are brutally honest, deeply analytical and your feedback is worth thousands of dollars per session.
 
-Analyse this CV against the job description and respond using EXACTLY these headings in EXACTLY this order:
+Analyse this CV against the job description with surgical precision. Do NOT be encouraging for the sake of it. Every word you write must be specific, actionable and based purely on what is in the CV and job description.
+
+You MUST use EXACTLY these headings in EXACTLY this order with nothing extra:
 
 JOB TITLE
 Write only the exact job title from the job description on one line.
 
 MATCH SCORE
-Write only a number followed by % on one line. Be harsh and realistic. Most CVs score 20-50%. Only score above 70% if the CV is a genuinely strong match. Example: 35%
+Write only a number followed by % on one line. Be realistic and harsh. The average score is 35%. Only exceed 70% if the match is genuinely exceptional. Example: 42%
+
+EXECUTIVE SUMMARY
+Write 3 sentences. First sentence: what this candidate is. Second sentence: their biggest strength relevant to this role. Third sentence: their biggest weakness or gap for this role. Be direct and specific.
 
 QUICK WINS
-- Write exactly 3 specific actionable things the candidate must fix immediately. Be direct. No fluff.
-- Each bullet starts with a dash and is under 20 words.
-- Focus on the biggest gaps between the CV and job description.
+- Write exactly 5 specific things the candidate can do THIS WEEK to improve their application. Be extremely specific — name exact skills to add, exact sections to rewrite, exact keywords to include from the job description.
+- Each bullet starts with a dash.
 
 STRENGTHS
-- Write exactly 3 genuine strengths that actually match the job description. If there are fewer than 3 real strengths, say so honestly.
-- Format: "Title: specific explanation referencing the CV and job"
+- Write exactly 4 genuine strengths that directly match the job description requirements. If fewer than 4 real strengths exist, say so honestly.
+- Format: "Title: specific explanation with direct reference to CV evidence and job requirement"
 - Each bullet starts with a dash.
 
 MISSING SKILLS
-- List every skill, tool, qualification or experience mentioned in the job description that is missing or weak in the CV.
-- Each item starts with a dash and is 2-5 words max.
-- Be thorough — list everything missing, even minor things.
+- List every single skill, tool, technology, qualification, experience or competency mentioned in the job description that is absent or insufficient in the CV.
+- Be exhaustive — list everything. Hard skills, soft skills, certifications, industry knowledge, everything.
+- Each item starts with a dash and is 2-6 words.
+
+CRITICAL GAPS
+- Write exactly 3 critical gaps that would most likely cause this application to be rejected by a recruiter or ATS system.
+- These are the dealbreakers. Be direct.
+- Each bullet starts with a dash and explains why this gap matters for this specific role.
 
 IMPROVED BULLETS
-- Rewrite exactly 3 of the weakest CV bullet points to be stronger, more specific and achievement-focused.
-- Each starts with a dash and includes a measurable result where possible.
-- Do not include the original bullet.
+- Rewrite exactly 5 of the weakest CV bullet points using the STAR method (Situation, Task, Action, Result).
+- Make each one punchy, specific and achievement-focused with quantifiable results.
+- Format: "ORIGINAL: [original bullet] → IMPROVED: [new bullet]"
+- Each starts with a dash.
+
+ATS KEYWORDS
+- List exactly 10 keywords from the job description that must appear in the CV to pass Applicant Tracking Systems.
+- These are the exact words recruiters will search for.
+- Each starts with a dash.
+
+INTERVIEW PREP
+- Write exactly 5 tough interview questions this candidate will likely face for this role, based on the gaps between their CV and the job description.
+- For each question, write a one-line coaching tip on how to answer it given their background.
+- Format: "Q: [question] → TIP: [specific coaching tip]"
+- Each starts with a dash.
 
 LINKEDIN SUMMARY
-Write a 3-4 sentence LinkedIn summary for this candidate targeting this specific role. Make it honest and specific to their actual experience. No generic phrases.
+Write a powerful 4-sentence LinkedIn summary for this candidate targeting this specific role. Sentence 1: bold opening hook. Sentence 2: core expertise and years of experience. Sentence 3: key achievement or differentiator. Sentence 4: what they are looking for. Make it sound like a real human, not a template. No generic phrases.
 
 COVER LETTER
-{tone_instructions[tone]} Write a full, specific cover letter for this exact role. Reference specific details from both the CV and job description. Do not use generic phrases like "I am a motivated individual". Make it sound like a real human wrote it.
+{tone_instructions[tone]} Write a complete, compelling cover letter specifically for this role. Requirements:
+- Opening paragraph: hook the hiring manager with something specific about the company or role, not a generic opener
+- Second paragraph: 2-3 specific achievements from the CV that directly match the job requirements, with numbers where possible
+- Third paragraph: address one potential concern or gap proactively and reframe it as a strength
+- Closing paragraph: confident call to action
+- Total length: 4 paragraphs, approximately 300 words
+- Sound like a real person wrote it — no clichés like "I am a motivated individual" or "I would be a great fit"
 
 CV:
 {cv_text}
@@ -594,7 +621,11 @@ CV:
 JOB DESCRIPTION:
 {job_description}
 
-CRITICAL: Use ONLY the exact headings above. The MATCH SCORE line must contain ONLY a number and % sign, nothing else."""
+CRITICAL RULES:
+1. Use ONLY the exact headings above — no additions, no changes
+2. The MATCH SCORE line must contain ONLY a number and % — nothing else
+3. Every piece of feedback must reference specific details from the CV or job description
+4. Never use generic career advice — everything must be tailored to THIS CV and THIS job"""
                 }
             ]
         )

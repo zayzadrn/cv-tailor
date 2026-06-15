@@ -1006,3 +1006,15 @@ a.nav-logo span { color: #d97706; }
 }
 
 .footer-links a:hover { color: #1a1a1a; }
+
+.amber-tag {
+    background: #fef3c7;
+    color: #92400e;
+    border: 1px solid #fde68a;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    display: inline-block;
+    margin: 3px;
+}
