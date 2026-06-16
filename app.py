@@ -545,75 +545,44 @@ def analyse():
         'bold': 'Write in a bold, confident and assertive tone that stands out.'
     }
 
+    import time
+    start_time = time.time()
+    print(f"Starting Claude call at {start_time}")
+
     try:
         message = client.messages.create(
             model="claude-sonnet-4-6",
-            max_tokens=2000,
+            max_tokens=1800,
             messages=[
                 {
                     "role": "user",
-                    "content": f"""You are a world-class career strategist who has helped thousands of professionals land roles at top companies including Goldman Sachs, Google, McKinsey and Fortune 500 firms. You are brutally honest, deeply analytical and your feedback is worth thousands of dollars per session.
+                    "content": f"""You are a brutally honest career coach. Be direct, specific and critical — never generic.
 
-Analyse this CV against the job description with surgical precision. Do NOT be encouraging for the sake of it. Every word you write must be specific, actionable and based purely on what is in the CV and job description.
-
-You MUST use EXACTLY these headings in EXACTLY this order with nothing extra:
+Analyse this CV against the job description. Use EXACTLY these headings:
 
 JOB TITLE
-Write only the exact job title from the job description on one line.
+Write only the exact job title on one line.
 
 MATCH SCORE
-Write only a number followed by % on one line. Be realistic and harsh. The average score is 35%. Only exceed 70% if the match is genuinely exceptional. Example: 42%
-
-EXECUTIVE SUMMARY
-Write 3 sentences. First sentence: what this candidate is. Second sentence: their biggest strength relevant to this role. Third sentence: their biggest weakness or gap for this role. Be direct and specific.
+Write only a number followed by %. Be harsh. Average is 35%. Example: 35%
 
 QUICK WINS
-- Write exactly 5 specific things the candidate can do THIS WEEK to improve their application. Be extremely specific — name exact skills to add, exact sections to rewrite, exact keywords to include from the job description.
-- Each bullet starts with a dash.
+- Write exactly 4 specific actionable fixes. Each bullet starts with a dash, under 20 words.
 
 STRENGTHS
-- Write exactly 4 genuine strengths that directly match the job description requirements. If fewer than 4 real strengths exist, say so honestly.
-- Format: "Title: specific explanation with direct reference to CV evidence and job requirement"
-- Each bullet starts with a dash.
+- Write exactly 3 genuine strengths matching the job. Format "Title: explanation". Each starts with a dash.
 
 MISSING SKILLS
-- List every single skill, tool, technology, qualification, experience or competency mentioned in the job description that is absent or insufficient in the CV.
-- Be exhaustive — list everything. Hard skills, soft skills, certifications, industry knowledge, everything.
-- Each item starts with a dash and is 2-6 words.
-
-CRITICAL GAPS
-- Write exactly 3 critical gaps that would most likely cause this application to be rejected by a recruiter or ATS system.
-- These are the dealbreakers. Be direct.
-- Each bullet starts with a dash and explains why this gap matters for this specific role.
+- List every missing skill or requirement from the job description. Each starts with a dash, 2-5 words.
 
 IMPROVED BULLETS
-- Rewrite exactly 5 of the weakest CV bullet points using the STAR method (Situation, Task, Action, Result).
-- Make each one punchy, specific and achievement-focused with quantifiable results.
-- Format: "ORIGINAL: [original bullet] → IMPROVED: [new bullet]"
-- Each starts with a dash.
-
-ATS KEYWORDS
-- List exactly 10 keywords from the job description that must appear in the CV to pass Applicant Tracking Systems.
-- These are the exact words recruiters will search for.
-- Each starts with a dash.
-
-INTERVIEW PREP
-- Write exactly 5 tough interview questions this candidate will likely face for this role, based on the gaps between their CV and the job description.
-- For each question, write a one-line coaching tip on how to answer it given their background.
-- Format: "Q: [question] → TIP: [specific coaching tip]"
-- Each starts with a dash.
+- Rewrite exactly 3 weak CV bullets to be stronger with measurable results. Each starts with a dash.
 
 LINKEDIN SUMMARY
-Write a powerful 4-sentence LinkedIn summary for this candidate targeting this specific role. Sentence 1: bold opening hook. Sentence 2: core expertise and years of experience. Sentence 3: key achievement or differentiator. Sentence 4: what they are looking for. Make it sound like a real human, not a template. No generic phrases.
+Write 3-4 sentences for a LinkedIn summary specific to this role and CV.
 
 COVER LETTER
-{tone_instructions[tone]} Write a complete, compelling cover letter specifically for this role. Requirements:
-- Opening paragraph: hook the hiring manager with something specific about the company or role, not a generic opener
-- Second paragraph: 2-3 specific achievements from the CV that directly match the job requirements, with numbers where possible
-- Third paragraph: address one potential concern or gap proactively and reframe it as a strength
-- Closing paragraph: confident call to action
-- Total length: 4 paragraphs, approximately 300 words
-- Sound like a real person wrote it — no clichés like "I am a motivated individual" or "I would be a great fit"
+{tone_instructions[tone]} Write a complete, specific cover letter for this role referencing real CV details. No clichés.
 
 CV:
 {cv_text}
@@ -621,61 +590,51 @@ CV:
 JOB DESCRIPTION:
 {job_description}
 
-CRITICAL RULES:
-1. Use ONLY the exact headings above — no additions, no changes
-2. The MATCH SCORE line must contain ONLY a number and % — nothing else
-3. Every piece of feedback must reference specific details from the CV or job description
-4. Never use generic career advice — everything must be tailored to THIS CV and THIS job"""
+Use ONLY the exact headings above. MATCH SCORE line must contain ONLY a number and %."""
                 }
             ]
         )
 
+        elapsed = time.time() - start_time
+        print(f"Claude call finished in {elapsed:.2f} seconds")
+
         result = message.content[0].text
 
     except Exception as e:
-        print(f"Claude error: {e}")
+        elapsed = time.time() - start_time
+        print(f"Claude error after {elapsed:.2f} seconds: {e}")
         flash("AI analysis failed. Please try again.", "error")
         return redirect(url_for('index'))
 
-    # Parse job title and match score
     job_title = "Unknown Role"
     match_score = "0%"
     lines = result.splitlines()
-    
     in_title_section = False
     in_score_section = False
-    
+
     for line in lines:
         stripped = line.strip()
-        
         if stripped.upper() == 'JOB TITLE':
             in_title_section = True
             in_score_section = False
             continue
-        
         if stripped.upper() == 'MATCH SCORE':
             in_score_section = True
             in_title_section = False
             continue
-        
         if stripped.upper() in ['QUICK WINS', 'STRENGTHS', 'MISSING SKILLS', 'IMPROVED BULLETS', 'LINKEDIN SUMMARY', 'COVER LETTER']:
             in_title_section = False
             in_score_section = False
             continue
-        
         if in_title_section and stripped and job_title == "Unknown Role":
             job_title = stripped
             in_title_section = False
-        
         if in_score_section and stripped:
             import re
             score_match = re.search(r'(\d+)\s*%', stripped)
             if score_match:
                 match_score = score_match.group(1) + '%'
                 in_score_section = False
-
-    print(f"Parsed job_title: {job_title}")
-    print(f"Parsed match_score: {match_score}")
 
     analysis = Analysis(
         job_title=job_title,
