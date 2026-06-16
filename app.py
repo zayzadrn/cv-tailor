@@ -546,17 +546,16 @@ def analyse():
     }
 
     import time
-    start_time = time.time()
-    print(f"Starting Claude call at {start_time}")
 
     try:
-        message = client.messages.create(
+        start1 = time.time()
+        message1 = client.messages.create(
             model="claude-sonnet-4-6",
-            max_tokens=1800,
-         messages=[
+            max_tokens=1400,
+            messages=[
                 {
                     "role": "user",
-                    "content": f"""You are a world-class career strategist who has helped professionals land roles at top companies. Be brutally honest, specific and analytical — never generic or encouraging for its own sake.
+                    "content": f"""You are a world-class career strategist. Be brutally honest, specific and analytical — never generic.
 
 Analyse this CV against the job description. Use EXACTLY these headings in EXACTLY this order:
 
@@ -581,6 +580,30 @@ MISSING SKILLS
 CRITICAL GAPS
 - Write exactly 2 dealbreaker gaps that would likely cause rejection. Each starts with a dash and explains why it matters.
 
+CV:
+{cv_text}
+
+JOB DESCRIPTION:
+{job_description}
+
+CRITICAL: Use ONLY the exact headings above. MATCH SCORE line must contain ONLY a number and %."""
+                }
+            ]
+        )
+        part1 = message1.content[0].text
+        print(f"Call 1 finished in {time.time() - start1:.2f}s")
+
+        start2 = time.time()
+        message2 = client.messages.create(
+            model="claude-sonnet-4-6",
+            max_tokens=1600,
+            messages=[
+                {
+                    "role": "user",
+                    "content": f"""You are a world-class career strategist. Be specific and tailored — never generic.
+
+Based on this CV and job description, write EXACTLY these sections in EXACTLY this order:
+
 IMPROVED BULLETS
 - Rewrite exactly 3 weak CV bullets to be stronger with measurable results. Format "ORIGINAL: [x] → IMPROVED: [y]". Each starts with a dash.
 
@@ -599,19 +622,17 @@ CV:
 JOB DESCRIPTION:
 {job_description}
 
-CRITICAL: Use ONLY the exact headings above. MATCH SCORE line must contain ONLY a number and %."""
+CRITICAL: Use ONLY the exact headings above."""
                 }
             ]
         )
+        part2 = message2.content[0].text
+        print(f"Call 2 finished in {time.time() - start2:.2f}s")
 
-        elapsed = time.time() - start_time
-        print(f"Claude call finished in {elapsed:.2f} seconds")
-
-        result = message.content[0].text
+        result = part1.strip() + "\n\n" + part2.strip()
 
     except Exception as e:
-        elapsed = time.time() - start_time
-        print(f"Claude error after {elapsed:.2f} seconds: {e}")
+        print(f"Claude error: {e}")
         flash("AI analysis failed. Please try again.", "error")
         return redirect(url_for('index'))
 
@@ -631,7 +652,7 @@ CRITICAL: Use ONLY the exact headings above. MATCH SCORE line must contain ONLY 
             in_score_section = True
             in_title_section = False
             continue
-        if stripped.upper() in ['QUICK WINS', 'STRENGTHS', 'MISSING SKILLS', 'IMPROVED BULLETS', 'LINKEDIN SUMMARY', 'COVER LETTER']:
+        if stripped.upper() in ['EXECUTIVE SUMMARY', 'QUICK WINS', 'STRENGTHS', 'MISSING SKILLS', 'CRITICAL GAPS', 'IMPROVED BULLETS', 'ATS KEYWORDS', 'LINKEDIN SUMMARY', 'COVER LETTER']:
             in_title_section = False
             in_score_section = False
             continue
