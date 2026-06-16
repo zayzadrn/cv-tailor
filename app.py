@@ -547,8 +547,8 @@ def analyse():
 
     try:
         message = client.messages.create(
-            model="claude-opus-4-8",
-            max_tokens=2500,
+            model="claude-sonnet-4-6",
+            max_tokens=2000,
             messages=[
                 {
                     "role": "user",
