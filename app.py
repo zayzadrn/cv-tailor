@@ -553,36 +553,45 @@ def analyse():
         message = client.messages.create(
             model="claude-sonnet-4-6",
             max_tokens=1800,
-            messages=[
+         messages=[
                 {
                     "role": "user",
-                    "content": f"""You are a brutally honest career coach. Be direct, specific and critical — never generic.
+                    "content": f"""You are a world-class career strategist who has helped professionals land roles at top companies. Be brutally honest, specific and analytical — never generic or encouraging for its own sake.
 
-Analyse this CV against the job description. Use EXACTLY these headings:
+Analyse this CV against the job description. Use EXACTLY these headings in EXACTLY this order:
 
 JOB TITLE
 Write only the exact job title on one line.
 
 MATCH SCORE
-Write only a number followed by %. Be harsh. Average is 35%. Example: 35%
+Write only a number followed by %. Be harsh and realistic — average is 35%. Example: 35%
+
+EXECUTIVE SUMMARY
+Write 3 sentences: what this candidate is, their biggest relevant strength, their biggest gap for this role.
 
 QUICK WINS
-- Write exactly 4 specific actionable fixes. Each bullet starts with a dash, under 20 words.
+- Write exactly 4 specific actionable fixes the candidate can do this week. Each bullet starts with a dash, under 20 words.
 
 STRENGTHS
-- Write exactly 3 genuine strengths matching the job. Format "Title: explanation". Each starts with a dash.
+- Write exactly 3 genuine strengths matching the job description. Format "Title: explanation with CV evidence". Each starts with a dash.
 
 MISSING SKILLS
-- List every missing skill or requirement from the job description. Each starts with a dash, 2-5 words.
+- List every missing skill, tool or requirement from the job description. Each starts with a dash, 2-5 words.
+
+CRITICAL GAPS
+- Write exactly 2 dealbreaker gaps that would likely cause rejection. Each starts with a dash and explains why it matters.
 
 IMPROVED BULLETS
-- Rewrite exactly 3 weak CV bullets to be stronger with measurable results. Each starts with a dash.
+- Rewrite exactly 3 weak CV bullets to be stronger with measurable results. Format "ORIGINAL: [x] → IMPROVED: [y]". Each starts with a dash.
+
+ATS KEYWORDS
+- List exactly 8 exact keywords from the job description the CV must include to pass ATS screening. Each starts with a dash.
 
 LINKEDIN SUMMARY
-Write 3-4 sentences for a LinkedIn summary specific to this role and CV.
+Write 3-4 sentences for a LinkedIn summary specific to this role and CV. No generic phrases.
 
 COVER LETTER
-{tone_instructions[tone]} Write a complete, specific cover letter for this role referencing real CV details. No clichés.
+{tone_instructions[tone]} Write a complete, specific cover letter for this role referencing real CV details and job requirements. No clichés. About 250 words.
 
 CV:
 {cv_text}
@@ -590,7 +599,7 @@ CV:
 JOB DESCRIPTION:
 {job_description}
 
-Use ONLY the exact headings above. MATCH SCORE line must contain ONLY a number and %."""
+CRITICAL: Use ONLY the exact headings above. MATCH SCORE line must contain ONLY a number and %."""
                 }
             ]
         )
