@@ -84,7 +84,7 @@
         <p class="form-sub">Free. No account needed. Results in ~15 seconds.</p>
     </div>
 
-    <form method="POST" action="/analyse" enctype="multipart/form-data" onsubmit="showLoading()">
+ <form id="analysisForm" method="POST" action="/analyse" enctype="multipart/form-data">
 
         <div class="card">
             <div class="card-label">Your CV</div>
@@ -274,7 +274,7 @@ function showLoading() {
         }, delay);
     });
 
-    // Finish automatically when page redirects
+     // Finish automatically when page redirects
     window.addEventListener("beforeunload", () => {
         clearInterval(progressInterval);
 
@@ -284,6 +284,9 @@ function showLoading() {
     });
 }
 
+// --------------------
+// switchMode FUNCTION
+// --------------------
 function switchMode(mode) {
     const btns = document.querySelectorAll('.toggle-btn');
     btns.forEach(b => b.classList.remove('active'));
@@ -302,6 +305,8 @@ function switchMode(mode) {
         btns[1].classList.add('active');
     }
 }
+</script>
+
 <footer class="footer">
     <div class="footer-links">
         <a href="/privacy">Privacy Policy</a>
@@ -311,5 +316,12 @@ function switchMode(mode) {
         <span>© 2026 CVTailor</span>
     </div>
 </footer>
+
+<script>
+document.getElementById("analysisForm").addEventListener("submit", function () {
+    showLoading();
+});
+</script>
+
 </body>
 </html>
