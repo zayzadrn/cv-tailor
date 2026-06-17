@@ -1018,3 +1018,50 @@ a.nav-logo span { color: #d97706; }
     display: inline-block;
     margin: 3px;
 }
+
+/* ===== LOADING PROGRESS UI ===== */
+
+#progressWrapper {
+    width: 100%;
+    max-width: 600px;
+    margin: 20px auto 0 auto;
+    font-family: inherit;
+}
+
+#progressBar {
+    width: 0%;
+}
+
+#loading {
+    text-align: center;
+}
+
+#loadingMsg {
+    transition: opacity 0.3s ease;
+    font-size: 16px;
+    font-weight: 500;
+}
+
+/* nice pulse effect so it never feels frozen */
+@keyframes pulse {
+    0% { opacity: 0.4; }
+    50% { opacity: 1; }
+    100% { opacity: 0.4; }
+}
+
+#progressText {
+    animation: pulse 1.5s infinite;
+}
+
+#progressBar {
+    transition: width 0.8s ease;
+}
+
+#loading {
+    animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+}

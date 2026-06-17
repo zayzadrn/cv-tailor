@@ -165,6 +165,12 @@ const stepTiming = [
 let msgIndex = 0;
 
 function showLoading() {
+    // clear previous intervals (IMPORTANT)
+    if (window.loadingIntervals) {
+        window.loadingIntervals.forEach(clearInterval);
+    }
+    window.loadingIntervals = [];
+
     document.querySelector('.submit-btn').style.display = 'none';
     document.querySelector('.proof-row').style.display = 'none';
     document.getElementById('loading').style.display = 'block';
@@ -217,38 +223,40 @@ function showLoading() {
     ];
 
     let stageIndex = 0;
-
     msgEl.textContent = stages[0];
 
-    setInterval(() => {
+    // STAGE ANIMATION (tracked properly)
+    window.loadingIntervals.push(setInterval(() => {
         stageIndex = (stageIndex + 1) % stages.length;
         msgEl.textContent = stages[stageIndex];
         progressText.textContent = stages[stageIndex];
-    }, 4000);
+    }, 4000));
 
-    let progress = 0;
-    let seconds = 0;
+    let startTime = Date.now();
 
-    const progressInterval = setInterval(() => {
+    // PROGRESS ANIMATION (tracked properly)
+    window.loadingIntervals.push(setInterval(() => {
 
-        seconds++;
-        timerText.textContent = `Elapsed: ${seconds}s`;
+        const elapsed = Math.floor((Date.now() - startTime) / 1000);
+        timerText.textContent = `Elapsed: ${elapsed}s`;
 
-        if (progress < 70) {
-            progress += 3;
+        let progress;
+
+        if (elapsed < 10) {
+            progress = elapsed * 6;
+        } else if (elapsed < 25) {
+            progress = 60 + (elapsed - 10) * 2;
+        } else {
+            progress = 90 + (elapsed - 25) * 0.3;
         }
-        else if (progress < 90) {
-            progress += 1;
-        }
-        else if (progress < 97) {
-            progress += 0.2;
-        }
+
+        progress = Math.min(progress, 97);
 
         progressBar.style.width = progress + "%";
         percentText.textContent = Math.floor(progress) + "%";
 
-    }, 1000);
-
+    }, 1000));
+}
     // Animate the checklist slowly
     stepTiming.forEach(({ step, delay }, i) => {
         setTimeout(() => {
