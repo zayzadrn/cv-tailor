@@ -1,4 +1,6 @@
-!DOCTYPE html>
+
+Index · HTML
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -123,30 +125,27 @@
         <button type="submit" class="submit-btn">✦ Analyse My CV — It's Free</button>
  
         <div class="loading" id="loading">
-            <div class="spinner"></div>
-            <p class="loading-msg" id="loadingMsg">Reading your CV...</p>
  
-            <div id="progressWrapper" style="margin-top:25px;">
-                <div style="display:flex;justify-content:space-between;font-size:14px;margin-bottom:8px;">
-                    <span id="progressText">Preparing analysis...</span>
+            <div class="progress-ring-wrap">
+                <svg class="progress-ring" viewBox="0 0 120 120">
+                    <circle class="progress-ring-track" cx="60" cy="60" r="52"></circle>
+                    <circle class="progress-ring-fill" id="progressRing" cx="60" cy="60" r="52"></circle>
+                </svg>
+                <div class="progress-ring-label">
                     <span id="percentText">0%</span>
                 </div>
-                <div style="height:10px;background:#222;border-radius:999px;overflow:hidden;">
-                    <div id="progressBar"
-                         style="height:100%;width:0%;background:linear-gradient(90deg,#8b5cf6,#3b82f6);transition:width .25s ease;">
-                    </div>
-                </div>
-                <div id="timerText" style="margin-top:10px;font-size:13px;opacity:.8;">
-                    Elapsed: 0s
-                </div>
             </div>
  
+            <p class="loading-msg" id="loadingMsg">Reading your CV...</p>
+            <div class="loading-timer" id="timerText">Elapsed: 0s</div>
+ 
             <div class="loading-steps">
-                <div class="step" id="step1">📄 Reading CV</div>
-                <div class="step" id="step2">🔍 Matching skills</div>
-                <div class="step" id="step3">✍️ Writing analysis</div>
-                <div class="step" id="step4">✉️ Cover letter</div>
+                <div class="step" id="step1"><span class="step-dot"></span>Reading CV</div>
+                <div class="step" id="step2"><span class="step-dot"></span>Matching skills</div>
+                <div class="step" id="step3"><span class="step-dot"></span>Writing analysis</div>
+                <div class="step" id="step4"><span class="step-dot"></span>Cover letter</div>
             </div>
+ 
         </div>
  
     </form>
@@ -180,8 +179,9 @@ const stages = [
     "Finalising analysis..."
 ];
  
+const RING_CIRCUMFERENCE = 2 * Math.PI * 52; // matches r=52 in the SVG
+ 
 function showLoading() {
-    // Clear any previous intervals so they never stack up
     if (window.loadingIntervals) {
         window.loadingIntervals.forEach(clearInterval);
     }
@@ -194,52 +194,53 @@ function showLoading() {
     loading.style.display = 'block';
  
     const msgEl = document.getElementById('loadingMsg');
-    const progressBar = document.getElementById('progressBar');
+    const ring = document.getElementById('progressRing');
     const percentText = document.getElementById('percentText');
-    const progressText = document.getElementById('progressText');
     const timerText = document.getElementById('timerText');
+ 
+    ring.style.strokeDasharray = RING_CIRCUMFERENCE;
+    ring.style.strokeDashoffset = RING_CIRCUMFERENCE;
  
     let stageIndex = 0;
     msgEl.textContent = stages[0];
-    progressText.textContent = stages[0];
+    msgEl.style.opacity = '1';
  
-    // Rotate the status message every 4 seconds
     window.loadingIntervals.push(setInterval(() => {
-        stageIndex = (stageIndex + 1) % stages.length;
-        msgEl.textContent = stages[stageIndex];
-        progressText.textContent = stages[stageIndex];
+        msgEl.style.opacity = '0';
+        setTimeout(() => {
+            stageIndex = (stageIndex + 1) % stages.length;
+            msgEl.textContent = stages[stageIndex];
+            msgEl.style.opacity = '1';
+        }, 250);
     }, 4000));
  
     const startTime = Date.now();
  
-    // Live progress bar + elapsed timer, updates every 200ms for smooth movement
     window.loadingIntervals.push(setInterval(() => {
         const elapsedMs = Date.now() - startTime;
         const elapsedSec = Math.floor(elapsedMs / 1000);
         timerText.textContent = `Elapsed: ${elapsedSec}s`;
  
-        // Progress curve: fast early, slows down, never quite reaches 100
-        // so it never looks "finished" before the page actually redirects
         let progress;
         const s = elapsedMs / 1000;
  
         if (s < 10) {
-            progress = s * 6;                       // 0%  -> 60%  over first 10s
+            progress = s * 6;
         } else if (s < 25) {
-            progress = 60 + (s - 10) * 2;            // 60% -> 90%  over next 15s
+            progress = 60 + (s - 10) * 2;
         } else if (s < 45) {
-            progress = 90 + (s - 25) * 0.35;         // 90% -> 97%  over next 20s
+            progress = 90 + (s - 25) * 0.35;
         } else {
-            progress = 97 + (s - 45) * 0.03;         // creeps very slowly past 97%
+            progress = 97 + (s - 45) * 0.03;
         }
  
         progress = Math.min(progress, 99);
  
-        progressBar.style.width = progress + '%';
+        const offset = RING_CIRCUMFERENCE - (progress / 100) * RING_CIRCUMFERENCE;
+        ring.style.strokeDashoffset = offset;
         percentText.textContent = Math.floor(progress) + '%';
     }, 200));
  
-    // Step checklist animation
     stepTiming.forEach(({ step, delay }, i) => {
         setTimeout(() => {
             if (i > 0) {
@@ -250,13 +251,11 @@ function showLoading() {
         }, delay);
     });
  
-    // When the page actually navigates away to result.html, snap to 100%
-    // (mostly just a nice finishing touch right before the browser swaps pages)
     window.addEventListener('beforeunload', () => {
         window.loadingIntervals.forEach(clearInterval);
-        progressBar.style.width = '100%';
+        ring.style.strokeDashoffset = 0;
         percentText.textContent = '100%';
-        progressText.textContent = 'Analysis complete!';
+        msgEl.textContent = 'Analysis complete!';
     });
 }
  
