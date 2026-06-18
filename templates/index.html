@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-
+ 
 <!-- NAV -->
 <nav class="nav">
     <a href="/" class="nav-logo">CV<span>Tailor</span></a>
@@ -24,13 +24,13 @@
         {% endif %}
     </div>
 </nav>
-
+ 
 <!-- HERO -->
 <div class="hero">
     <div class="hero-tag">✦ AI-powered in seconds</div>
     <h1 class="hero-title">Land your next<br><span>dream job faster</span></h1>
     <p class="hero-sub">Upload your CV and a job description. Get an instant match score, skills gap analysis, rewritten bullets, and a tailored cover letter — all powered by AI.</p>
-
+ 
     <div class="feature-grid">
         <div class="feature-card">
             <div class="feature-icon" style="background:rgba(139,92,246,0.12);color:#a78bfa">📊</div>
@@ -76,16 +76,16 @@
         </div>
     </div>
 </div>
-
+ 
 <!-- FORM -->
 <div class="form-section">
     <div class="form-header">
         <h2 class="form-title">Analyse your CV now</h2>
-        <p class="form-sub">Free. No account needed. Results in ~15 seconds.</p>
+        <p class="form-sub">Free. No account needed. Takes about 30-45 seconds.</p>
     </div>
-
- <form id="analysisForm" method="POST" action="/analyse" enctype="multipart/form-data">
-
+ 
+    <form id="analysisForm" method="POST" action="/analyse" enctype="multipart/form-data">
+ 
         <div class="card">
             <div class="card-label">Your CV</div>
             <div class="cv-toggle">
@@ -106,7 +106,7 @@
                 <textarea name="cv_text" rows="10" placeholder="Paste your full CV text here..."></textarea>
             </div>
         </div>
-
+ 
         <div class="card">
             <div class="card-label">Job Description</div>
             <div class="tone-row">
@@ -119,12 +119,28 @@
             </div>
             <textarea name="job_description" rows="10" placeholder="Paste the full job description here..." required></textarea>
         </div>
-
+ 
         <button type="submit" class="submit-btn">✦ Analyse My CV — It's Free</button>
-
+ 
         <div class="loading" id="loading">
             <div class="spinner"></div>
             <p class="loading-msg" id="loadingMsg">Reading your CV...</p>
+ 
+            <div id="progressWrapper" style="margin-top:25px;">
+                <div style="display:flex;justify-content:space-between;font-size:14px;margin-bottom:8px;">
+                    <span id="progressText">Preparing analysis...</span>
+                    <span id="percentText">0%</span>
+                </div>
+                <div style="height:10px;background:#222;border-radius:999px;overflow:hidden;">
+                    <div id="progressBar"
+                         style="height:100%;width:0%;background:linear-gradient(90deg,#8b5cf6,#3b82f6);transition:width .25s ease;">
+                    </div>
+                </div>
+                <div id="timerText" style="margin-top:10px;font-size:13px;opacity:.8;">
+                    Elapsed: 0s
+                </div>
+            </div>
+ 
             <div class="loading-steps">
                 <div class="step" id="step1">📄 Reading CV</div>
                 <div class="step" id="step2">🔍 Matching skills</div>
@@ -132,165 +148,122 @@
                 <div class="step" id="step4">✉️ Cover letter</div>
             </div>
         </div>
-
+ 
     </form>
-
+ 
     <!-- SOCIAL PROOF -->
     <div class="proof-row">
         <div class="proof-item">✦ No signup required</div>
         <div class="proof-dot"></div>
-        <div class="proof-item">✦ Results in ~15 seconds</div>
+        <div class="proof-item">✦ Takes about 30-45 seconds</div>
         <div class="proof-dot"></div>
         <div class="proof-item">✦ Powered by Claude AI</div>
     </div>
 </div>
-
+ 
 <script>
-const messages = [
-    "Reading your CV...",
-    "Matching your skills to the job...",
-    "Identifying skill gaps...",
-    "Rewriting your CV bullets...",
-    "Writing your cover letter...",
-    "Finalising your analysis..."
-];
-
 const stepTiming = [
     { step: 'step1', delay: 0 },
-    { step: 'step2', delay: 3000 },
-    { step: 'step3', delay: 7000 },
-    { step: 'step4', delay: 11000 },
+    { step: 'step2', delay: 4000 },
+    { step: 'step3', delay: 16000 },
+    { step: 'step4', delay: 28000 },
 ];
-
-let msgIndex = 0;
-
+ 
+const stages = [
+    "Reading your CV...",
+    "Matching skills to the job...",
+    "Comparing with job description...",
+    "Finding missing skills...",
+    "Rewriting CV bullets...",
+    "Writing LinkedIn summary...",
+    "Generating cover letter...",
+    "Finalising analysis..."
+];
+ 
 function showLoading() {
-    // clear previous intervals (IMPORTANT)
+    // Clear any previous intervals so they never stack up
     if (window.loadingIntervals) {
         window.loadingIntervals.forEach(clearInterval);
     }
     window.loadingIntervals = [];
-
+ 
     document.querySelector('.submit-btn').style.display = 'none';
     document.querySelector('.proof-row').style.display = 'none';
-    document.getElementById('loading').style.display = 'block';
-
+ 
+    const loading = document.getElementById('loading');
+    loading.style.display = 'block';
+ 
     const msgEl = document.getElementById('loadingMsg');
-
-    // Create progress bar if it doesn't exist
-    if (!document.getElementById('progressWrapper')) {
-        const loading = document.getElementById('loading');
-
-        const wrapper = document.createElement("div");
-        wrapper.id = "progressWrapper";
-        wrapper.style.marginTop = "25px";
-
-        wrapper.innerHTML = `
-            <div style="display:flex;justify-content:space-between;font-size:14px;margin-bottom:8px;">
-                <span id="progressText">Preparing analysis...</span>
-                <span id="percentText">0%</span>
-            </div>
-
-            <div style="height:10px;background:#222;border-radius:999px;overflow:hidden;">
-                <div id="progressBar"
-                     style="height:100%;width:0%;background:linear-gradient(90deg,#8b5cf6,#3b82f6);transition:width .25s ease;">
-                </div>
-            </div>
-
-            <div id="timerText"
-                 style="margin-top:10px;font-size:13px;opacity:.8;">
-                 Elapsed: 0s
-            </div>
-        `;
-
-        loading.appendChild(wrapper);
-    }
-
-    const progressBar = document.getElementById("progressBar");
-    const percentText = document.getElementById("percentText");
-    const progressText = document.getElementById("progressText");
-    const timerText = document.getElementById("timerText");
-
-    const stages = [
-        "Reading your CV...",
-        "Matching skills...",
-        "Comparing with job description...",
-        "Finding missing skills...",
-        "Rewriting CV bullets...",
-        "Writing LinkedIn summary...",
-        "Generating cover letter...",
-        "Finalising analysis..."
-    ];
-
+    const progressBar = document.getElementById('progressBar');
+    const percentText = document.getElementById('percentText');
+    const progressText = document.getElementById('progressText');
+    const timerText = document.getElementById('timerText');
+ 
     let stageIndex = 0;
     msgEl.textContent = stages[0];
-
-    // STAGE ANIMATION (tracked properly)
+    progressText.textContent = stages[0];
+ 
+    // Rotate the status message every 4 seconds
     window.loadingIntervals.push(setInterval(() => {
         stageIndex = (stageIndex + 1) % stages.length;
         msgEl.textContent = stages[stageIndex];
         progressText.textContent = stages[stageIndex];
     }, 4000));
-
-    let startTime = Date.now();
-
-    // PROGRESS ANIMATION (tracked properly)
+ 
+    const startTime = Date.now();
+ 
+    // Live progress bar + elapsed timer, updates every 200ms for smooth movement
     window.loadingIntervals.push(setInterval(() => {
-
-        const elapsed = Math.floor((Date.now() - startTime) / 1000);
-        timerText.textContent = `Elapsed: ${elapsed}s`;
-
+        const elapsedMs = Date.now() - startTime;
+        const elapsedSec = Math.floor(elapsedMs / 1000);
+        timerText.textContent = `Elapsed: ${elapsedSec}s`;
+ 
+        // Progress curve: fast early, slows down, never quite reaches 100
+        // so it never looks "finished" before the page actually redirects
         let progress;
-
-        if (elapsed < 10) {
-            progress = elapsed * 6;
-        } else if (elapsed < 25) {
-            progress = 60 + (elapsed - 10) * 2;
+        const s = elapsedMs / 1000;
+ 
+        if (s < 10) {
+            progress = s * 6;                       // 0%  -> 60%  over first 10s
+        } else if (s < 25) {
+            progress = 60 + (s - 10) * 2;            // 60% -> 90%  over next 15s
+        } else if (s < 45) {
+            progress = 90 + (s - 25) * 0.35;         // 90% -> 97%  over next 20s
         } else {
-            progress = 90 + (elapsed - 25) * 0.3;
+            progress = 97 + (s - 45) * 0.03;         // creeps very slowly past 97%
         }
-
-        progress = Math.min(progress, 97);
-
-        progressBar.style.width = progress + "%";
-        percentText.textContent = Math.floor(progress) + "%";
-
-    }, 1000));
-}
-    // Animate the checklist slowly
+ 
+        progress = Math.min(progress, 99);
+ 
+        progressBar.style.width = progress + '%';
+        percentText.textContent = Math.floor(progress) + '%';
+    }, 200));
+ 
+    // Step checklist animation
     stepTiming.forEach(({ step, delay }, i) => {
         setTimeout(() => {
-
             if (i > 0) {
-                document.getElementById(stepTiming[i - 1].step)
-                    .classList.remove("active");
-
-                document.getElementById(stepTiming[i - 1].step)
-                    .classList.add("done");
+                document.getElementById(stepTiming[i - 1].step).classList.remove('active');
+                document.getElementById(stepTiming[i - 1].step).classList.add('done');
             }
-
-            document.getElementById(step).classList.add("active");
-
+            document.getElementById(step).classList.add('active');
         }, delay);
     });
-
-     // Finish automatically when page redirects
-    window.addEventListener("beforeunload", () => {
-        clearInterval(progressInterval);
-
-        progressBar.style.width = "100%";
-        percentText.textContent = "100%";
-        progressText.textContent = "Analysis complete!";
+ 
+    // When the page actually navigates away to result.html, snap to 100%
+    // (mostly just a nice finishing touch right before the browser swaps pages)
+    window.addEventListener('beforeunload', () => {
+        window.loadingIntervals.forEach(clearInterval);
+        progressBar.style.width = '100%';
+        percentText.textContent = '100%';
+        progressText.textContent = 'Analysis complete!';
     });
 }
-
-// --------------------
-// switchMode FUNCTION
-// --------------------
+ 
 function switchMode(mode) {
     const btns = document.querySelectorAll('.toggle-btn');
     btns.forEach(b => b.classList.remove('active'));
-
+ 
     if (mode === 'file') {
         document.getElementById('fileMode').style.display = 'block';
         document.getElementById('textMode').style.display = 'none';
@@ -305,8 +278,12 @@ function switchMode(mode) {
         btns[1].classList.add('active');
     }
 }
+ 
+document.getElementById("analysisForm").addEventListener("submit", function () {
+    showLoading();
+});
 </script>
-
+ 
 <footer class="footer">
     <div class="footer-links">
         <a href="/privacy">Privacy Policy</a>
@@ -316,12 +293,7 @@ function switchMode(mode) {
         <span>© 2026 CVTailor</span>
     </div>
 </footer>
-
-<script>
-document.getElementById("analysisForm").addEventListener("submit", function () {
-    showLoading();
-});
-</script>
-
+ 
 </body>
 </html>
+ 
