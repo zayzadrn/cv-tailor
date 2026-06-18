@@ -1065,3 +1065,115 @@ a.nav-logo span { color: #d97706; }
     from { opacity: 0; transform: translateY(5px); }
     to { opacity: 1; transform: translateY(0); }
 }
+
+ /* PREMIUM LOADING SCREEN */
+.loading {
+    display: none;
+    text-align: center;
+    padding: 56px 20px 40px;
+}
+
+.progress-ring-wrap {
+    position: relative;
+    width: 140px;
+    height: 140px;
+    margin: 0 auto 28px;
+}
+
+.progress-ring {
+    width: 140px;
+    height: 140px;
+    transform: rotate(-90deg);
+}
+
+.progress-ring-track {
+    fill: none;
+    stroke: #f0eee8;
+    stroke-width: 8;
+}
+
+.progress-ring-fill {
+    fill: none;
+    stroke: #d97706;
+    stroke-width: 8;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 0.2s ease;
+}
+
+.progress-ring-label {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    font-weight: 800;
+    color: #1a1a1a;
+    letter-spacing: -0.02em;
+}
+
+.loading-msg {
+    color: #1a1a1a;
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    transition: opacity 0.25s ease;
+    min-height: 22px;
+}
+
+.loading-timer {
+    color: #a8a29e;
+    font-size: 12px;
+    font-weight: 500;
+    margin-bottom: 28px;
+}
+
+.loading-steps {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.loading-steps .step {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    background: #fffffe;
+    border: 1px solid #e8e6e0;
+    border-radius: 999px;
+    padding: 7px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #d6d3d1;
+    transition: all 0.4s ease;
+}
+
+.loading-steps .step-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #e8e6e0;
+    transition: all 0.4s ease;
+}
+
+.loading-steps .step.active {
+    border-color: #fde68a;
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.loading-steps .step.active .step-dot {
+    background: #d97706;
+    box-shadow: 0 0 0 3px rgba(217,119,6,0.18);
+}
+
+.loading-steps .step.done {
+    border-color: #e8e6e0;
+    background: #fffffe;
+    color: #a8a29e;
+}
+
+.loading-steps .step.done .step-dot {
+    background: #16a34a;
+}
