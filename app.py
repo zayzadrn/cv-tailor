@@ -546,16 +546,9 @@ def analyse():
     }
 
     import time
+    from concurrent.futures import ThreadPoolExecutor
 
-    try:
-        start1 = time.time()
-        message1 = client.messages.create(
-            model="claude-sonnet-4-6",
-            max_tokens=1400,
-            messages=[
-                {
-                    "role": "user",
-                    "content": f"""You are a world-class career strategist. Be brutally honest, specific and analytical — never generic.
+    prompt1 = f"""You are a world-class career strategist. Be brutally honest, specific and analytical — never generic.
 
 Analyse this CV against the job description. Use EXACTLY these headings in EXACTLY this order:
 
@@ -587,20 +580,8 @@ JOB DESCRIPTION:
 {job_description}
 
 CRITICAL: Use ONLY the exact headings above. MATCH SCORE line must contain ONLY a number and %."""
-                }
-            ]
-        )
-        part1 = message1.content[0].text
-        print(f"Call 1 finished in {time.time() - start1:.2f}s")
 
-        start2 = time.time()
-        message2 = client.messages.create(
-            model="claude-sonnet-4-6",
-            max_tokens=1600,
-            messages=[
-                {
-                    "role": "user",
-                    "content": f"""You are a world-class career strategist. Be specific and tailored — never generic.
+    prompt2 = f"""You are a world-class career strategist. Be specific and tailored — never generic.
 
 Based on this CV and job description, write EXACTLY these sections in EXACTLY this order:
 
@@ -623,11 +604,28 @@ JOB DESCRIPTION:
 {job_description}
 
 CRITICAL: Use ONLY the exact headings above."""
-                }
-            ]
+
+    def call_claude(prompt, max_tokens, label):
+        start = time.time()
+        message = client.messages.create(
+            model="claude-sonnet-4-6",
+            max_tokens=max_tokens,
+            messages=[{"role": "user", "content": prompt}]
         )
-        part2 = message2.content[0].text
-        print(f"Call 2 finished in {time.time() - start2:.2f}s")
+        print(f"{label} finished in {time.time() - start:.2f}s")
+        return message.content[0].text
+
+    try:
+        overall_start = time.time()
+
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            future1 = executor.submit(call_claude, prompt1, 1400, "Call 1")
+            future2 = executor.submit(call_claude, prompt2, 1600, "Call 2")
+
+            part1 = future1.result()
+            part2 = future2.result()
+
+        print(f"Both calls finished in {time.time() - overall_start:.2f}s total")
 
         result = part1.strip() + "\n\n" + part2.strip()
 
