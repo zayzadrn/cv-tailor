@@ -1,101 +1,120 @@
-CVTailor
+CVTailor — AI-Powered CV & Job Application Tool
 
-AI-powered CV and job-match analysis. Upload your CV and a job description, and get an instant match score, skills gap analysis, rewritten bullet points, ATS keyword suggestions, and a tailored cover letter — all generated in under a minute.
+Upload your CV and a job description. Get an instant AI match score, skills gap analysis, rewritten CV bullets, a tailored cover letter, and a LinkedIn summary — all powered by Claude AI.
 
-🔗 Live app: cv-tailor-production-e361.up.railway.app
+
+
+What It Does
+CVTailor analyses your CV against any job description and gives you:
+
+
+Match Score — a percentage showing how well your CV fits the role, with a visual score indicator
+Strengths — 3 things in your CV that align well with the job
+Missing Skills — key gaps shown as visual tags so you can see exactly what to work on
+Improved CV Bullets — AI rewrites your existing bullet points to better match the job description
+Quick Wins — 3 immediate actions you can take to boost your chances
+LinkedIn Summary — an optimised LinkedIn summary tailored to the role
+Cover Letter — a full tailored cover letter in your chosen tone (Professional, Friendly, or Bold)
+PDF Export — download your full analysis report as a PDF
 
 
 Screenshots
 
-Login/Signup
-
-![alt text](<Screenshot 2026-06-21 at 18.27.54.png>)
-
-
-Homepage
-
-![alt text](<Screenshot 2026-06-20 at 17.56.38-1.png>)
-![alt text](<Screenshot 2026-06-20 at 17.33.56-1.png>)
-![alt text](<Screenshot 2026-06-20 at 17.34.19.png>)
-
-Results
-![alt text](<Screenshot 2026-06-20 at 17.56.03-1.png>)
-![alt text](<Screenshot 2026-06-20 at 17.56.15.png>)
-![alt text](<Screenshot 2026-06-20 at 17.56.25.png>)
-
-
-
-
-Features
-
-
-Match Score — an honest, weighted score showing how well a CV fits a specific job description
-Executive Summary — a concise AI-written overview of fit, strengths, and gaps
-Critical Gaps & Quick Wins — the dealbreaker issues to fix first, plus fast actionable improvements
-Missing Skills & ATS Keywords — the exact terms a CV is missing that applicant tracking systems scan for
-Improved Bullet Points — before-and-after rewrites of weak CV bullets, tailored to the role
-LinkedIn Summary — a ready-to-use profile summary written for the specific job
-Tailored Cover Letter — a complete cover letter in a chosen tone (professional, friendly, or bold)
-PDF Export — download the full analysis as a formatted PDF
-Accounts & History — sign up with email or Google to save and revisit past analyses
-Secure authentication — email/password with verification, or Google OAuth
-
+coming soon..
 
 
 Tech Stack
+LayerTechnologyBackendPython, FlaskAIAnthropic Claude APIPDF ParsingPyMuPDF (fitz)FrontendHTML, CSS, JavaScriptTemplatingJinja2StorageCSV / SQLite (in progress)DeploymentRailway
 
-LayerTechnologyBackendPython, FlaskAIAnthropic API (Claude)PDF parsingPyMuPDFDatabaseSQLite + SQLAlchemyAuthFlask-Login, Authlib (Google OAuth)EmailResendHostingRailwayFrontendHTML, CSS, vanilla JavaScript
+Features
 
-
-How It Works
-
-
-The user uploads a CV (PDF or pasted text) and pastes a job description.
-The backend extracts CV text using PyMuPDF.
-Two sequential calls to the Anthropic API analyse the CV against the job description — split into two calls to keep response times fast and reliable:
-
-Call 1 generates the job title, match score, executive summary, quick wins, strengths, and critical gaps.
-Call 2 generates improved bullet points, ATS keywords, a LinkedIn summary, and a tailored cover letter.
-
-
-
-Results are parsed, stored against the user's account (if logged in), and rendered on the results page.
-Users can export the full analysis as a PDF.
+Upload CV as PDF or paste as plain text
+Paste any job description
+Choose cover letter tone: Professional, Friendly, or Bold
+AI thinking animation with step-by-step progress indicators
+Visual match score circle (colour coded: green/amber/red)
+Missing skills displayed as visual tags
+One-click copy for cover letter and LinkedIn summary
+Download full analysis as PDF report
+Clean, modern UI — no signup required
 
 
+Getting Started
+Prerequisites
 
-Running Locally
+Python 3.12+
+An Anthropic API key (get one here)
 
-bashgit clone https://github.com/zayzadrn/cv-tailor.git
+Installation
+
+Clone the repository:
+
+bashgit clone https://github.com/yourusername/cv-tailor.git
 cd cv-tailor
-python3 -m venv venv
+
+Create and activate a virtual environment:
+
+bashpython3 -m venv venv
 source venv/bin/activate
-pip install -r requirements.txt
 
-Create a .env file in the project root with the following:
+Install dependencies:
 
-ANTHROPIC_API_KEY=your_anthropic_api_key
-RESEND_API_KEY=your_resend_api_key
-GOOGLE_CLIENT_ID=your_google_oauth_client_id
-GOOGLE_CLIENT_SECRET=your_google_oauth_client_secret
-SECRET_KEY=your_flask_secret_key
+bashpip install flask anthropic pymupdf python-dotenv
 
-Then run:
+Create a .env file in the root directory:
 
-bashpython app.py
+ANTHROPIC_API_KEY=your_api_key_here
 
-The app will be available at http://127.0.0.1:5001.
+Run the app:
+
+bashpython3 app.py
+
+Open your browser and go to http://127.0.0.1:5000
 
 
-Deployment
+Project Structure
+cv-tailor/
+├── app.py                 # Flask application and routes
+├── templates/
+│   ├── index.html         # Upload page
+│   └── result.html        # Results page
+├── static/
+│   └── style.css          # Styling
+├── .env                   # API keys (not committed to Git)
+├── .gitignore             # Ignores .env and venv
+└── README.md
 
-This app is deployed on Railway. The Procfile runs:
+Roadmap
 
-web: gunicorn app:app --timeout 120 --workers 2
+ CV upload (PDF and text)
+ AI match score with visual indicator
+ Skills gap analysis
+ CV bullet rewriter
+ Cover letter generator
+ LinkedIn summary generator
+ PDF report download
+ Cover letter tone selector
+ AI thinking animation
+ Analysis history (SQLite)
+ User authentication
+ Deployment to Railway
 
-Environment variables (API keys, OAuth credentials, PREFERRED_URL_SCHEME=https) are set in the Railway project's Variables tab. A /health endpoint is included for Railway's health checks.
 
+What I Learned Building This
+This project taught me:
+
+Building a full-stack web application with Flask
+Integrating third-party AI APIs (Anthropic Claude)
+Handling file uploads and PDF text extraction
+Structuring prompts to get reliable, structured AI output
+Frontend development with HTML, CSS, and JavaScript
+Environment variable management and security best practices
+
+
+Author
+Osman Zadran
+Aspiring Python Developer | Currently building real projects to break into tech
+GitHub · LinkedIn
 
 License
-
-This project is for personal and portfolio use.
+MIT License — feel free to use this project as inspiration for your own.
