@@ -1,5 +1,4 @@
 import os
-import os
 import fitz
 import resend
 from flask_limiter import Limiter
