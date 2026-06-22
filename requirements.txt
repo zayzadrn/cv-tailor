@@ -43,3 +43,4 @@ typing_extensions==4.15.0
 urllib3==2.7.0
 URLObject==3.0.0
 Werkzeug==3.1.8
+Flask-Limiter==4.1.1

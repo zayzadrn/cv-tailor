@@ -1,8 +1,9 @@
 import os
-
 import os
 import fitz
 import resend
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 from anthropic import Anthropic
 from dotenv import load_dotenv
@@ -21,6 +22,12 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///cvtailor.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key')
 app.config['PREFERRED_URL_SCHEME'] = 'https'
+
+limiter = Limiter(
+    get_remote_address,
+    app=app,
+    default_limits=[]
+)
 
 db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
@@ -520,6 +527,7 @@ def verify_email_change(token):
 
 @app.route('/analyse', methods=['POST'])
 @login_required
+@limiter.limit("5 per hour")
 def analyse():
     job_description = request.form['job_description']
     tone = request.form.get('tone', 'professional')
