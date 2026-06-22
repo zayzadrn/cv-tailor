@@ -1,5 +1,3 @@
-
-Index · HTML
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -10,7 +8,7 @@ Index · HTML
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
- 
+
 <!-- NAV -->
 <nav class="nav">
     <a href="/" class="nav-logo">CV<span>Tailor</span></a>
@@ -26,13 +24,13 @@ Index · HTML
         {% endif %}
     </div>
 </nav>
- 
+
 <!-- HERO -->
 <div class="hero">
     <div class="hero-tag">✦ AI-powered in seconds</div>
     <h1 class="hero-title">Land your next<br><span>dream job faster</span></h1>
     <p class="hero-sub">Upload your CV and a job description. Get an instant match score, skills gap analysis, rewritten bullets, and a tailored cover letter — all powered by AI.</p>
- 
+
     <div class="feature-grid">
         <div class="feature-card">
             <div class="feature-icon" style="background:rgba(139,92,246,0.12);color:#a78bfa">📊</div>
@@ -78,16 +76,16 @@ Index · HTML
         </div>
     </div>
 </div>
- 
+
 <!-- FORM -->
 <div class="form-section">
     <div class="form-header">
         <h2 class="form-title">Analyse your CV now</h2>
-        <p class="form-sub">Free. No account needed. Takes about 30-45 seconds.</p>
+        <p class="form-sub">Free. No account needed. Takes about 30 seconds.</p>
     </div>
- 
-    <form id="analysisForm" method="POST" action="/analyse" enctype="multipart/form-data">
- 
+
+    <form id="analysisForm" enctype="multipart/form-data">
+
         <div class="card">
             <div class="card-label">Your CV</div>
             <div class="cv-toggle">
@@ -108,7 +106,7 @@ Index · HTML
                 <textarea name="cv_text" rows="10" placeholder="Paste your full CV text here..."></textarea>
             </div>
         </div>
- 
+
         <div class="card">
             <div class="card-label">Job Description</div>
             <div class="tone-row">
@@ -121,11 +119,11 @@ Index · HTML
             </div>
             <textarea name="job_description" rows="10" placeholder="Paste the full job description here..." required></textarea>
         </div>
- 
+
         <button type="submit" class="submit-btn">✦ Analyse My CV — It's Free</button>
- 
+
         <div class="loading" id="loading">
- 
+
             <div class="progress-ring-wrap">
                 <svg class="progress-ring" viewBox="0 0 120 120">
                     <circle class="progress-ring-track" cx="60" cy="60" r="52"></circle>
@@ -135,31 +133,33 @@ Index · HTML
                     <span id="percentText">0%</span>
                 </div>
             </div>
- 
+
             <p class="loading-msg" id="loadingMsg">Reading your CV...</p>
             <div class="loading-timer" id="timerText">Elapsed: 0s</div>
- 
+
             <div class="loading-steps">
                 <div class="step" id="step1"><span class="step-dot"></span>Reading CV</div>
                 <div class="step" id="step2"><span class="step-dot"></span>Matching skills</div>
                 <div class="step" id="step3"><span class="step-dot"></span>Writing analysis</div>
                 <div class="step" id="step4"><span class="step-dot"></span>Cover letter</div>
             </div>
- 
+
+            <p class="loading-error" id="loadingError" style="display:none;color:#dc2626;margin-top:16px;font-size:14px;"></p>
+
         </div>
- 
+
     </form>
- 
+
     <!-- SOCIAL PROOF -->
     <div class="proof-row">
         <div class="proof-item">✦ No signup required</div>
         <div class="proof-dot"></div>
-        <div class="proof-item">✦ Takes about 30-45 seconds</div>
+        <div class="proof-item">✦ Takes about 30 seconds</div>
         <div class="proof-dot"></div>
         <div class="proof-item">✦ Powered by Claude AI</div>
     </div>
 </div>
- 
+
 <script>
 const stepTiming = [
     { step: 'step1', delay: 0 },
@@ -167,7 +167,7 @@ const stepTiming = [
     { step: 'step3', delay: 16000 },
     { step: 'step4', delay: 28000 },
 ];
- 
+
 const stages = [
     "Reading your CV...",
     "Matching skills to the job...",
@@ -178,33 +178,58 @@ const stages = [
     "Generating cover letter...",
     "Finalising analysis..."
 ];
- 
-const RING_CIRCUMFERENCE = 2 * Math.PI * 52; // matches r=52 in the SVG
- 
+
+const RING_CIRCUMFERENCE = 2 * Math.PI * 52;
+
+function setRingProgress(progress) {
+    const ring = document.getElementById('progressRing');
+    const percentText = document.getElementById('percentText');
+    const offset = RING_CIRCUMFERENCE - (progress / 100) * RING_CIRCUMFERENCE;
+    ring.style.strokeDashoffset = offset;
+    percentText.textContent = Math.floor(progress) + '%';
+}
+
+function completeRing() {
+    // Smoothly animate to 100% over 600ms then redirect
+    const ring = document.getElementById('progressRing');
+    const percentText = document.getElementById('percentText');
+    const msgEl = document.getElementById('loadingMsg');
+
+    ring.style.transition = 'stroke-dashoffset 0.6s ease';
+    ring.style.strokeDashoffset = 0;
+    percentText.textContent = '100%';
+    msgEl.style.opacity = '0';
+    setTimeout(() => {
+        msgEl.textContent = 'Analysis complete!';
+        msgEl.style.opacity = '1';
+    }, 250);
+}
+
 function showLoading() {
     if (window.loadingIntervals) {
         window.loadingIntervals.forEach(clearInterval);
     }
     window.loadingIntervals = [];
- 
+
     document.querySelector('.submit-btn').style.display = 'none';
     document.querySelector('.proof-row').style.display = 'none';
- 
+
     const loading = document.getElementById('loading');
     loading.style.display = 'block';
- 
+
     const msgEl = document.getElementById('loadingMsg');
     const ring = document.getElementById('progressRing');
-    const percentText = document.getElementById('percentText');
     const timerText = document.getElementById('timerText');
- 
+
+    ring.style.transition = 'stroke-dashoffset 0.2s ease';
     ring.style.strokeDasharray = RING_CIRCUMFERENCE;
     ring.style.strokeDashoffset = RING_CIRCUMFERENCE;
- 
+
     let stageIndex = 0;
     msgEl.textContent = stages[0];
     msgEl.style.opacity = '1';
- 
+
+    // Rotate status message every 4 seconds
     window.loadingIntervals.push(setInterval(() => {
         msgEl.style.opacity = '0';
         setTimeout(() => {
@@ -213,34 +238,27 @@ function showLoading() {
             msgEl.style.opacity = '1';
         }, 250);
     }, 4000));
- 
+
     const startTime = Date.now();
- 
+
+    // Progress curve — fast early, slows near end, never hits 99% so
+    // it never looks done before the server actually responds
     window.loadingIntervals.push(setInterval(() => {
         const elapsedMs = Date.now() - startTime;
         const elapsedSec = Math.floor(elapsedMs / 1000);
         timerText.textContent = `Elapsed: ${elapsedSec}s`;
- 
-        let progress;
+
         const s = elapsedMs / 1000;
- 
-        if (s < 10) {
-            progress = s * 6;
-        } else if (s < 25) {
-            progress = 60 + (s - 10) * 2;
-        } else if (s < 45) {
-            progress = 90 + (s - 25) * 0.35;
-        } else {
-            progress = 97 + (s - 45) * 0.03;
-        }
- 
-        progress = Math.min(progress, 99);
- 
-        const offset = RING_CIRCUMFERENCE - (progress / 100) * RING_CIRCUMFERENCE;
-        ring.style.strokeDashoffset = offset;
-        percentText.textContent = Math.floor(progress) + '%';
+        let progress;
+        if (s < 10)       progress = s * 6;
+        else if (s < 25)  progress = 60 + (s - 10) * 2;
+        else if (s < 45)  progress = 90 + (s - 25) * 0.35;
+        else              progress = 97 + (s - 45) * 0.03;
+
+        setRingProgress(Math.min(progress, 99));
     }, 200));
- 
+
+    // Step chip animation
     stepTiming.forEach(({ step, delay }, i) => {
         setTimeout(() => {
             if (i > 0) {
@@ -250,19 +268,82 @@ function showLoading() {
             document.getElementById(step).classList.add('active');
         }, delay);
     });
- 
-    window.addEventListener('beforeunload', () => {
-        window.loadingIntervals.forEach(clearInterval);
-        ring.style.strokeDashoffset = 0;
-        percentText.textContent = '100%';
-        msgEl.textContent = 'Analysis complete!';
-    });
 }
- 
+
+function showError(message) {
+    // Re-show the form controls so the user can try again
+    document.querySelector('.submit-btn').style.display = 'block';
+    document.querySelector('.proof-row').style.display = 'flex';
+    document.getElementById('loading').style.display = 'none';
+
+    if (window.loadingIntervals) {
+        window.loadingIntervals.forEach(clearInterval);
+    }
+
+    // Flash the error message at the top
+    const err = document.getElementById('loadingError');
+    err.textContent = message;
+    err.style.display = 'block';
+    document.getElementById('loading').style.display = 'block';
+}
+
+// Intercept form submit — use fetch instead of a page-navigating POST
+document.getElementById("analysisForm").addEventListener("submit", async function(e) {
+    e.preventDefault(); // Stop the browser navigating away
+
+    const jobDesc = document.querySelector('textarea[name="job_description"]').value.trim();
+    if (!jobDesc) {
+        alert('Please paste a job description.');
+        return;
+    }
+
+    showLoading();
+
+    const formData = new FormData(this);
+
+    try {
+        const response = await fetch('/analyse', {
+            method: 'POST',
+            body: formData
+        });
+
+        // Server finished — stop the fake progress and animate to 100%
+        window.loadingIntervals.forEach(clearInterval);
+        window.loadingIntervals = [];
+
+        if (response.redirected) {
+            // Flask redirected us to result.html — complete the ring then follow
+            completeRing();
+            setTimeout(() => {
+                window.location.href = response.url;
+            }, 700);
+            return;
+        }
+
+        if (response.ok) {
+            // Response is the result page HTML delivered directly
+            completeRing();
+            const html = await response.text();
+            setTimeout(() => {
+                document.open();
+                document.write(html);
+                document.close();
+            }, 700);
+            return;
+        }
+
+        // Server returned an error
+        showError('Analysis failed. Please try again.');
+
+    } catch (err) {
+        showError('Something went wrong. Please check your connection and try again.');
+    }
+});
+
 function switchMode(mode) {
     const btns = document.querySelectorAll('.toggle-btn');
     btns.forEach(b => b.classList.remove('active'));
- 
+
     if (mode === 'file') {
         document.getElementById('fileMode').style.display = 'block';
         document.getElementById('textMode').style.display = 'none';
@@ -277,12 +358,8 @@ function switchMode(mode) {
         btns[1].classList.add('active');
     }
 }
- 
-document.getElementById("analysisForm").addEventListener("submit", function () {
-    showLoading();
-});
 </script>
- 
+
 <footer class="footer">
     <div class="footer-links">
         <a href="/privacy">Privacy Policy</a>
@@ -292,7 +369,6 @@ document.getElementById("analysisForm").addEventListener("submit", function () {
         <span>© 2026 CVTailor</span>
     </div>
 </footer>
- 
+
 </body>
 </html>
- 
